@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    /* Configuración Básica */
+    "target": "es2016",
+    "module": "commonjs",                                
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    
+    /* Rutas */
+    "outDir": "./dist",
+    "rootDir": "./src",
+
+    /* Estrictez y Chequeos */
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* Esta es la línea que causaba tu error específico, la desactivamos o quitamos */
+    "verbatimModuleSyntax": false
+  }
+}
