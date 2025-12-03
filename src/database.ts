@@ -19,6 +19,18 @@ const db = new sqlite3.Database('mi_tienda.db', (err) => {
         console.log('Tabla productos lista.');
       }
     });
+    //---tabla Usuarios -----
+    db.run(`CREATE TABLE IF NOT EXISTS usuarios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT,
+      email TEXT UNIQUE
+    )`, (err) => {
+      if (err) {
+        console.error('Error creando tabla usuarios:', err.message);
+      } else {
+        console.log('Tabla usuarios lista.');
+      }
+    });
   }
 });
 

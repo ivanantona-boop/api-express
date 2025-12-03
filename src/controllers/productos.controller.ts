@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ProductService } from '../services/producto.services';
+import { ProductService } from '../services/producto.service';
 import { ProductoSchema } from '../schemas/producto.schema';
 
 const productService = new ProductService();
