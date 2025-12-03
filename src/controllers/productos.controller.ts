@@ -1,54 +1,38 @@
 import { Request, Response } from 'express';
-import db from '../database';
+import { ProductService } from '../services/producto.services';
 import { ProductoSchema } from '../schemas/producto.schema';
 
-// 1. OBTENER todos los productos
-export const getProductos = (req: Request, res: Response) => {
-    const sql = 'SELECT * FROM productos';
-    db.all(sql, [], (err, rows) => {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.json({
-            mensaje: 'Lista de productos',
-            data: rows
-        });
-    });
+const productService = new ProductService();
+
+export const getProductos = async (req: Request, res: Response) => {
+    try {
+        const products = await productService.getAllProducts();
+        res.json(products);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
-// 2. CREAR un producto (Validado con Zod)
-export const createProducto = (req: Request, res: Response) => {
-    // Validamos los datos antes de hacer nada
+export const createProducto = async (req: Request, res: Response) => {
+    // 1. Zod valida la entrada HTTP
     const result = ProductoSchema.safeParse(req.body);
-
+    
     if (!result.success) {
-        // Si falla, devolvemos el error y paramos
         res.status(400).json({ error: result.error.format() });
         return; 
     }
 
-    const { nombre, precio } = result.data;
-    const sql = 'INSERT INTO productos (nombre, precio) VALUES (?, ?)';
-    
-    db.run(sql, [nombre, precio], function (err) {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        res.status(201).json({
-            mensaje: 'Producto guardado exitosamente',
-            id: this.lastID,
-            producto: { nombre, precio }
-        });
-    });
+    try {
+        // 2. El servicio hace el trabajo sucio
+        const newProduct = await productService.createProduct(result.data);
+        res.status(201).json(newProduct);
+    } catch (error: any) {
+        res.status(500).json({ error: error.message });
+    }
 };
 
-// 3. ACTUALIZAR un producto (Validado con Zod)
-export const updateProducto = (req: Request, res: Response) => {
+export const updateProducto = async (req: Request, res: Response) => {
     const { id } = req.params;
-
-    // También validamos los datos al actualizar
     const result = ProductoSchema.safeParse(req.body);
 
     if (!result.success) {
@@ -56,39 +40,31 @@ export const updateProducto = (req: Request, res: Response) => {
         return;
     }
 
-    const { nombre, precio } = result.data;
-    const sql = 'UPDATE productos SET nombre = ?, precio = ? WHERE id = ?';
-
-    db.run(sql, [nombre, precio, id], function(err) {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
+    try {
+        // Convertimos id a numero porque viene como string en la URL
+        const updatedProduct = await productService.updateProduct(Number(id), result.data);
+        res.json(updatedProduct);
+    } catch (error: any) {
+        // Si el servicio lanza error de "No encontrado", devolvemos 404
+        if (error.message.includes('no encontrado')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: error.message });
         }
-        if (this.changes === 0) {
-             res.status(404).json({ error: 'Producto no encontrado' });
-             return;
-        }
-        res.json({
-            mensaje: 'Producto actualizado',
-            producto: { id, nombre, precio }
-        });
-    });
+    }
 };
 
-// 4. BORRAR un producto
-export const deleteProducto = (req: Request, res: Response) => {
+export const deleteProducto = async (req: Request, res: Response) => {
     const { id } = req.params;
-    const sql = 'DELETE FROM productos WHERE id = ?';
 
-    db.run(sql, [id], function(err) {
-        if (err) {
-            res.status(400).json({ error: err.message });
-            return;
-        }
-        if (this.changes === 0) {
-            res.status(404).json({ error: 'Producto no encontrado' });
-            return;
-        }
+    try {
+        await productService.deleteProduct(Number(id));
         res.json({ mensaje: 'Producto eliminado exitosamente' });
-    });
+    } catch (error: any) {
+        if (error.message.includes('no encontrado')) {
+            res.status(404).json({ error: error.message });
+        } else {
+            res.status(500).json({ error: error.message });
+        }
+    }
 };
