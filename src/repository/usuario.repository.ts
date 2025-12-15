@@ -12,7 +12,7 @@ export class UserRepository { //encapsula las operaciones de la base de datos pa
         });
     }
 
-    create(user: User): Promise<User> {. //inserta un nuevo usuario
+    create(user: User): Promise<User> { //inserta un nuevo usuario
         return new Promise((resolve, reject) => {
             const sql = 'INSERT INTO usuarios (nombre, email) VALUES (?, ?)';
             db.run(sql, [user.nombre, user.email], function(err) {
