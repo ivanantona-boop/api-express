@@ -1,7 +1,7 @@
 import { UserRepository } from '../repository/usuario.repository';
 import { User } from '../models/usuario.model';
 
-const userRepo = new UserRepository();
+const userRepo = new UserRepository(); //instanciando el repositorio para poder usar sus métodos (getAll, create)
 
 export class UserService {
     async getAllUsers() {
