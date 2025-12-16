@@ -1,14 +1,17 @@
 import express from 'express';
-import productosRouter from './routes/productos.routes'; // Importamos las rutas
+import productosRouter from './routes/productos.routes';
+import usuariosRouter from './routes/usuario.route';
 
 const app = express();
 const port = 3000;
 
-app.use(express.json());
+// 1. ESTA ES LA LÍNEA MÁGICA QUE TE FALTA O ESTÁ MAL COLOCADA
+// Sin esto, req.body siempre será undefined
+app.use(express.json()); 
 
-// Aquí conectamos nuestras rutas.
-// Decimos: "Todo lo que empiece por /api/productos, mándalo al archivo de rutas"
+// 2. Las rutas van DESPUÉS del json()
 app.use('/api/productos', productosRouter);
+app.use('/api/usuarios', usuariosRouter);
 
 app.listen(port, () => {
   console.log(`Servidor corriendo en http://localhost:${port}`);
