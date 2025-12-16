@@ -7,6 +7,8 @@ import { getUsuarios, createUsuario } from '../controllers/usuario.controller';
 
 const router = Router();
 
+// Punto de entrada HTTP: solo declara rutas; no hagas lógica aquí (SRP - Single Responsibility Principle).
+// Si sumas endpoints (PUT/DELETE), agrégalos aquí y deja la lógica en controlador/servicio.
 router.get('/', getUsuarios);
 router.post('/', createUsuario);
 

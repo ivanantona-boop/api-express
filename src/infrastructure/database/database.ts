@@ -1,7 +1,10 @@
 import sqlite3 from 'sqlite3';
 
+// Adaptador secundario de persistencia (infraestructura).
+// Cumple SRP (Single Responsibility Principle): solo abre la conexión y prepara tablas.
+// Arquitectura hexagonal: es reemplazable si cambias de motor de base de datos.
 // Abre la base de datos (se creará el archivo 'mi_tienda.db' en la raíz)
-const db = new sqlite3.Database('mi_tienda.db', (err) => {
+const db = new sqlite3.Database('mi_tienda.db', (err: Error | null) => {
   if (err) {
     console.error('Error al abrir la base de datos:', err.message);
   } else {
@@ -12,7 +15,7 @@ const db = new sqlite3.Database('mi_tienda.db', (err) => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT,
       precio REAL
-    )`, (err) => {
+    )`, (err: Error | null) => {
       if (err) {
         console.error('Error creando tabla:', err.message);
       } else {
@@ -24,7 +27,7 @@ const db = new sqlite3.Database('mi_tienda.db', (err) => {
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT,
       email TEXT UNIQUE
-    )`, (err) => {
+    )`, (err: Error | null) => {
       if (err) {
         console.error('Error creando tabla usuarios:', err.message);
       } else {

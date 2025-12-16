@@ -8,6 +8,8 @@ import {
 
 const router = Router();
 
+// Capa de infraestructura (routing HTTP): conecta URLs con el controlador.
+// (OCP - Open/Closed Principle): si agregas nuevas acciones, define la ruta aquí sin romper las existentes.
 // Rutas sin ID
 router.get('/', getProductos);
 router.post('/', createProducto);

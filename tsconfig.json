@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     /* Configuración Básica */
-    "target": "es2016",
+    "target": "es2022",
     "module": "commonjs",                                
     "moduleResolution": "node",
     "esModuleInterop": true,

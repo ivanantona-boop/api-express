@@ -1,10 +1,12 @@
 import express from 'express';
-import productosRouter from './routes/productos.routes';
-import usuariosRouter from './routes/usuario.route';
+import productosRouter from './infrastructure/http/routes/productos.routes';
+import usuariosRouter from './infrastructure/http/routes/usuario.route';
 
 const app = express();
 const port = 3000;
 
+// Composition Root: aquí se cablean los adaptadores con el framework Express.
+// Idea hexagonal: el framework es un detalle. Si cambia el servidor HTTP, solo tocamos este archivo.
 // 1. ESTA ES LA LÍNEA MÁGICA QUE TE FALTA O ESTÁ MAL COLOCADA
 // Sin esto, req.body siempre será undefined
 app.use(express.json()); 
