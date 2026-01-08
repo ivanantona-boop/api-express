@@ -22,5 +22,24 @@ export class UserRepository { //encapsula las operaciones de la base de datos pa
         });
     }
 
-    // (Puedes añadir update y delete aquí siguiendo el modelo de productos)
+    update(id: number, user: User): Promise<User | null> {
+        return new Promise((resolve, reject) => {
+            const sql = 'UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?';
+            db.run(sql, [user.nombre, user.email, id], function(err) {
+                if (err) reject(err);
+                resolve(this.changes > 0 ? { id, ...user } : null);
+            });
+        });
+    }
+
+    delete(id: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            const sql = 'DELETE FROM usuarios WHERE id = ?';
+            db.run(sql, [id], function(err) {
+                if (err) reject(err);
+                resolve();
+            });
+        });
+    }
+
 }
