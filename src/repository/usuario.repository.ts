@@ -1,9 +1,9 @@
 import db from '../database';
-import { User } from '../models/usuario.model';
+import { Usuario } from '../models/usuario.model';
 
-export class UserRepository { //encapsula las operaciones de la base de datos para usuarios
+export class UsuarioRepository { //encapsula las operaciones de la base de datos para usuarios
     
-    getAll(): Promise<User[]> {
+    getAll(): Promise<Usuario[]> {
         return new Promise((resolve, reject) => {
             db.all('SELECT * FROM usuarios', [], (err, rows: any[]) => {
                 if (err) reject(err);
@@ -12,22 +12,22 @@ export class UserRepository { //encapsula las operaciones de la base de datos pa
         });
     }
 
-    create(user: User): Promise<User> { //inserta un nuevo usuario
+    create(usuario: Usuario): Promise<Usuario> { //inserta un nuevo usuario
         return new Promise((resolve, reject) => {
-            const sql = 'INSERT INTO usuarios (nombre, email) VALUES (?, ?)';
-            db.run(sql, [user.nombre, user.email], function(err) {
+            const sql = 'INSERT INTO usuarios (nombre, email, apellidos, contraseña) VALUES (?, ?, ?, ?)';
+            db.run(sql, [usuario.nombre, usuario.email, usuario.apellidos, usuario.contraseña], function(err) {
                 if (err) reject(err);
-                resolve({ id: this.lastID, ...user });
+                resolve({ id: this.lastID, ...usuario });
             });
         });
     }
 
-    update(id: number, user: User): Promise<User | null> {
+    update(id: number, usuario: Usuario): Promise<Usuario | null> {
         return new Promise((resolve, reject) => {
-            const sql = 'UPDATE usuarios SET nombre = ?, email = ? WHERE id = ?';
-            db.run(sql, [user.nombre, user.email, id], function(err) {
+            const sql = 'UPDATE usuarios SET nombre = ?, email = ?, apellidos = ?, contraseña = ? WHERE id = ?';
+            db.run(sql, [usuario.nombre, usuario.email, usuario.apellidos, usuario.contraseña, id], function(err) {
                 if (err) reject(err);
-                resolve(this.changes > 0 ? { id, ...user } : null);
+                resolve(this.changes > 0 ? { id, ...usuario } : null);
             });
         });
     }

@@ -1,70 +1,37 @@
 import { Request, Response } from 'express';
-import { ProductService } from '../services/producto.service';
+import { ProductoService } from '../services/producto.service';
 import { ProductoSchema } from '../schemas/producto.schema';
 
-const productService = new ProductService();
 
-export const getProductos = async (req: Request, res: Response) => {
-    try {
-        const products = await productService.getAllProducts();
-        res.json(products);
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-};
+export class ProductoController {
+    // 1. ELIMINAMOS: const productoService = new ProductoService();
 
-export const createProducto = async (req: Request, res: Response) => {
-    // 1. Zod valida la entrada HTTP
-    const result = ProductoSchema.safeParse(req.body);
-    
-    if (!result.success) {
-        res.status(400).json({ error: result.error.format() });
-        return; 
-    }
+    // 2. AÑADIMOS: El constructor que recibe el servicio
+    constructor(private productoService: ProductoService) {}
 
-    try {
-        // 2. El servicio hace el trabajo sucio
-        const newProduct = await productService.createProduct(result.data);
-        res.status(201).json(newProduct);
-    } catch (error: any) {
-        res.status(500).json({ error: error.message });
-    }
-};
 
-export const updateProducto = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const result = ProductoSchema.safeParse(req.body);
-
-    if (!result.success) {
-        res.status(400).json({ error: result.error.format() });
-        return;
-    }
-
-    try {
-        // Convertimos id a numero porque viene como string en la URL
-        const updatedProduct = await productService.updateProduct(Number(id), result.data);
-        res.json(updatedProduct);
-    } catch (error: any) {
-        // Si el servicio lanza error de "No encontrado", devolvemos 404
-        if (error.message.includes('no encontrado')) {
-            res.status(404).json({ error: error.message });
-        } else {
+    // 3. CAMBIAMOS: Las funciones ahora son métodos de la clase
+    // Usamos arrow functions ( => ) para que el 'this' no se pierda en Express
+    getProductos = async (req: Request, res: Response) => {
+        try {
+            const productos = await this.productoService.getAllProductos();
+            res.json(productos);
+        } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
-    }
-};
+    };
 
-export const deleteProducto = async (req: Request, res: Response) => {
-    const { id } = req.params;
-
-    try {
-        await productService.deleteProduct(Number(id));
-        res.json({ mensaje: 'Producto eliminado exitosamente' });
-    } catch (error: any) {
-        if (error.message.includes('no encontrado')) {
-            res.status(404).json({ error: error.message });
-        } else {
+    createProducto = async (req: Request, res: Response) => {
+        const result = ProductoSchema.safeParse(req.body);
+        if (!result.success) {
+            res.status(400).json({ error: result.error.format() });
+            return; 
+        }
+        try {
+            const newProducto = await this.productoService.createProducto(result.data);
+            res.status(201).json(newProducto);
+        } catch (error: any) {
             res.status(500).json({ error: error.message });
         }
-    }
-};
+    };
+}

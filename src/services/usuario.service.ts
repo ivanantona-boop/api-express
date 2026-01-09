@@ -1,15 +1,33 @@
-import { UserRepository } from '../repository/usuario.repository';
-import { User } from '../models/usuario.model';
+import { Usuario } from '../models/usuario.model';
+// Importamos la INTERFAZ que creamos antes, no la clase directamente
+import { UsuarioRepository as IUsuarioRepository } from '../interfaces/usuario/usuario.repository.interface';
 
-const userRepo = new UserRepository(); //instanciando el repositorio para poder usar sus métodos (getAll, create)
+export class UsuarioService {
+    
+    // CAMBIO CLAVE: El servicio ahora "pide" el repositorio al ser creado
+    constructor(private usuarioRepo: IUsuarioRepository) {}
 
-export class UserService {
-    async getAllUsers() {
-        return await userRepo.getAll();
+    async getAllUsuarios() {
+        // Ahora usamos "this.usuarioRepo" que viene del constructor
+        return await this.usuarioRepo.getAll();
     }
 
-    async createUser(data: User) {
-        // Aquí podrías validar si el email ya existe, por ejemplo.
-        return await userRepo.create(data);
+    async createUsuario(data: Usuario) {
+        return await this.usuarioRepo.create(data);
     }
+    async updateUsuario(id: number, data: Usuario) {
+        const updated = await this.usuarioRepo.update(id, data);
+        if (!updated) {
+            throw new Error('Usuario no encontrado para actualizar');
+        }
+        return { id, ...data };
+    }
+
+    async deleteUsuario(id: number) {
+        const deleted = await this.usuarioRepo.delete(id);
+        if (!deleted) {
+            throw new Error('Usuario no encontrado para eliminar');
+        }
+        return true;
+    }   
 }

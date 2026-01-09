@@ -1,10 +1,10 @@
 import db from '../database';
-import { Product } from '../models/product.model';
+import {Producto} from '../models/producto.model';
 
-export class ProductRepository {
+export class ProductoRepository {
     
     // Obtener todos
-    getAll(): Promise<Product[]> {
+    getAll(): Promise<Producto[]> {
         return new Promise((resolve, reject) => {
             db.all('SELECT * FROM productos', [], (err, rows: any[]) => {
                 if (err) reject(err);
@@ -14,7 +14,7 @@ export class ProductRepository {
     }
 
     // Crear
-    create(product: Product): Promise<Product> {
+    create(product: Producto): Promise<Producto> {
         return new Promise((resolve, reject) => {
             const sql = 'INSERT INTO productos (nombre, precio) VALUES (?, ?)';
             // Usamos function normal para acceder a 'this'
@@ -27,7 +27,7 @@ export class ProductRepository {
     }
 
     // Actualizar
-    update(id: number, product: Product): Promise<boolean> {
+    update(id: number, product: Producto): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const sql = 'UPDATE productos SET nombre = ?, precio = ? WHERE id = ?';
             db.run(sql, [product.nombre, product.precio, id], function(err) {

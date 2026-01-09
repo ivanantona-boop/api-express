@@ -1,13 +1,10 @@
-import { Router } from 'express'; // permite crear un minigrupo de rutas aisladas
-// Fíjate en dos cosas:
-// 1. La ruta termina en usuario.controller (singular, como tu archivo)
-// 2. La función es getUsuarios (plural, como la definimos en el código anterior)
-
-import { getUsuarios, createUsuario } from '../controllers/usuario.controller';
+import { Router } from 'express';
+import { usuarioController } from '../container'; // Importas el objeto ya creado
 
 const router = Router();
 
-router.get('/', getUsuarios);
-router.post('/', createUsuario);
+// Usas los métodos de la instancia
+router.get('/', usuarioController.getUsuarios);
+router.post('/', usuarioController.createUsuario);
 
 export default router;
