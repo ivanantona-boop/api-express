@@ -16,10 +16,13 @@ export class EjercicioService {
         return await this.ejercicioRepo.createEjercicio(data);
     }
     
-    async actualizarEjercicio(id: number, data: Ejercicio): Promise<Ejercicio | null> {
-        // Aquí podríamos poner lógica de negocio extra antes de actualizar
-        return await this.ejercicioRepo.updateEjercicio(id, data);
+    async actualizarEjercicio(id: number, data: Ejercicio): Promise<Ejercicio> {
+    const ejercicio = await this.ejercicioRepo.updateEjercicio(id, data);
+    if (!ejercicio) {
+        throw new Error('Ejercicio no encontrado');
     }
+    return ejercicio;
+}
 
     async eliminarEjercicio(id: number): Promise<void> {
         return await this.ejercicioRepo.deleteEjercicio(id);
