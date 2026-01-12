@@ -5,7 +5,11 @@ export class UsuarioMockRepository implements IUsuarioRepository {
     private usuarios: Usuario[] = []; // Base de datos temporal en memoria
 
     async getAll(): Promise<Usuario[]> {
-        return this.usuarios;
+        return [...this.usuarios]; // Devolvemos una copia para evitar mutaciones externas
+    }
+
+    async getById(id: number): Promise<Usuario | null> {
+        return this.usuarios.find(u => u.id === id) || null;
     }
 
     async create(usuario: Usuario): Promise<Usuario> {
@@ -14,8 +18,17 @@ export class UsuarioMockRepository implements IUsuarioRepository {
         return nuevo;
     }
 
-    // ... implementas los demás métodos vacíos o con lógica simple
-    async getById(id: number) { return this.usuarios.find(u => u.id === id) || null; }
-    async update(id: number, u: Usuario) { return u; }
-    async delete(id: number) { return; }
+    async update(id: number, datosActualizados: Usuario): Promise<Usuario | null> {
+        const index = this.usuarios.findIndex(u => u.id === id);
+        if (index === -1) return null;
+
+        // Actualizamos el objeto en el array
+        this.usuarios[index] = { ...datosActualizados, id };
+        return this.usuarios[index];
+    }
+
+    async delete(id: number): Promise<void> {
+        // Filtramos el array para eliminar al usuario
+        this.usuarios = this.usuarios.filter(u => u.id !== id);
+    }
 }
