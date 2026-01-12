@@ -1,36 +1,30 @@
 import sqlite3 from 'sqlite3';
 
-// Abre la base de datos (se creará el archivo 'mi_tienda.db' en la raíz)
 const db = new sqlite3.Database('mi_tienda.db', (err) => {
-  if (err) {
-    console.error('Error al abrir la base de datos:', err.message);
-  } else {
-    console.log('Conectado a la base de datos SQLite.');
-    
-    // Crear tabla si no existe
+  if (err) console.error('Error:', err.message);
+  else {
+    // Tabla Productos
     db.run(`CREATE TABLE IF NOT EXISTS productos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nombre TEXT,
-      precio REAL
-    )`, (err) => {
-      if (err) {
-        console.error('Error creando tabla:', err.message);
-      } else {
-        console.log('Tabla productos lista.');
-      }
-    });
-    //---tabla Usuarios -----
+      nombre TEXT NOT NULL,
+      precio REAL NOT NULL
+    )`);
+
+    // Tabla Usuarios (Sincronizada con apellidos y contraseña)
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      nombre TEXT,
-      email TEXT UNIQUE
-    )`, (err) => {
-      if (err) {
-        console.error('Error creando tabla usuarios:', err.message);
-      } else {
-        console.log('Tabla usuarios lista.');
-      }
-    });
+      nombre TEXT NOT NULL,
+      apellidos TEXT,
+      email TEXT UNIQUE NOT NULL,
+      contraseña TEXT NOT NULL
+    )`);
+
+    // Tabla Ejercicios (Sincronizada con tu repositorio)
+    db.run(`CREATE TABLE IF NOT EXISTS ejercicios (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      nombre TEXT NOT NULL,
+      descripcion TEXT
+    )`);
   }
 });
 

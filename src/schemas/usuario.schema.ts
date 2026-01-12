@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
 export const UsuarioSchema = z.object({
-  nombre: z.string().min(2),
-  email: z.string().email({ message: "Debe ser un email válido" }) // ¡Validación de email gratis!
+  nombre: z.string().min(2, "Nombre muy corto"),
+  apellidos: z.string().min(2, "Apellidos muy cortos").optional(),
+  email: z.string().email("Email inválido"),
+  contraseña: z.string().min(6, "La contraseña debe tener al menos 6 caracteres")
 });

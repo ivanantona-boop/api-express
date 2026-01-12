@@ -1,11 +1,11 @@
 import { Router } from 'express';
-import { EjercicioController} from '../controllers/ejercicio.controller';
+import { ejercicioController} from '../container'; // Importas el objeto ya creado
 
 const router = Router();
 
-router.get('/', EjercicioController.getEjercicios);
-router.post('/', EjercicioController.createEjercicio);
-router.put('/:id', EjercicioController.updateEjercicio);
-router.delete('/:id', EjercicioController.deleteEjercicio);
+router.get('/', ejercicioController.getEjercicios);
+router.post('/', ejercicioController.createEjercicio);
+router.put('/:id', ejercicioController.updateEjercicio);
+router.delete('/:id', ejercicioController.deleteEjercicio);
 
 export default router;

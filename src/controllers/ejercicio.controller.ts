@@ -7,7 +7,7 @@ export class EjercicioController {
 
     // 2. AÑADIMOS: El constructor que recibe el servicio
     constructor(private ejercicioService: EjercicioService) {}
-    
+
     // 3. CAMBIAMOS: Las funciones ahora son métodos de la clase
     // Usamos arrow functions ( => ) para que el 'this' no se pierda en Express
     getEjercicios = async (req: Request, res: Response) => {
@@ -32,5 +32,27 @@ export class EjercicioController {
             res.status(500).json({ error: error.message });
         }
     };
-}   
+
+    updateEjercicio = async (req: Request, res: Response) => {
+        try {
+            const id = parseInt(req.params.id);
+            const validData = EjercicioSchema.parse(req.body);
+            const actualizado = await this.ejercicioService.actualizarEjercicio(id, validData);
+            res.json(actualizado);
+        } catch (error: any) {
+            res.status(404).json({ error: error.message });
+        }
+    };
+
+    // AÑADIR ESTE MÉTODO
+    deleteEjercicio = async (req: Request, res: Response) => {
+        try {
+            const id = parseInt(req.params.id);
+            await this.ejercicioService.eliminarEjercicio(id);
+            res.status(204).send();
+        } catch (error: any) {
+            res.status(404).json({ error: error.message });
+        }
+    };
+}
 

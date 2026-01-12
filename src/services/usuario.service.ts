@@ -11,6 +11,9 @@ export class UsuarioService {
         // Ahora usamos "this.usuarioRepo" que viene del constructor
         return await this.usuarioRepo.getAll();
     }
+    async getUsuarioById(id: number) {
+        return await this.usuarioRepo.getById(id);
+    }
 
     async createUsuario(data: Usuario) {
         return await this.usuarioRepo.create(data);

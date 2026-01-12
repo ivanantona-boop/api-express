@@ -1,33 +1,56 @@
-import db from '../database';
+import { Database } from 'sqlite3';
 import { Ejercicio } from '../models/ejercicio.model';
 
 export class EjercicioRepository {
-    async getAllEjercicios(): Promise<Ejercicio[]> {
-        const [rows] = await db.query('SELECT * FROM ejercicios');
-        return rows;
+    constructor(private db: Database) {}
+
+    getAllEjercicios(): Promise<Ejercicio[]> {
+        return new Promise((resolve, reject) => {
+            this.db.all('SELECT * FROM ejercicios', [], (err, rows: Ejercicio[]) => {
+                if (err) return reject(err);
+                resolve(rows);
+            });
+        });
     }
 
-    async getEjercicioById(id: number): Promise<Ejercicio | null> {
-        const [rows] = await db.query('SELECT * FROM ejercicios WHERE id = ?', [id]);
-        return rows[0] || null;
+    getEjercicioById(id: number): Promise<Ejercicio | null> {
+        return new Promise((resolve, reject) => {
+            this.db.get('SELECT * FROM ejercicios WHERE id = ?', [id], (err, row: Ejercicio) => {
+                if (err) return reject(err);
+                resolve(row || null);
+            });
+        });
     }
 
-    async getEjercicioByName(nombre: string): Promise<Ejercicio | null> {
-        const [rows] = await db.query('SELECT * FROM ejercicios WHERE nombre = ?', [nombre]);
-        return rows[0] || null;
+    createEjercicio(ejercicio: Ejercicio): Promise<Ejercicio> {
+        return new Promise((resolve, reject) => {
+            const sql = 'INSERT INTO ejercicios (nombre, descripcion) VALUES (?, ?)';
+            const params = [ejercicio.nombre, ejercicio.descripcion];
+            this.db.run(sql, params, function(err) {
+                if (err) return reject(err);
+                resolve({ id: this.lastID, ...ejercicio });
+            });
+        });
     }
 
-    async createEjercicio(ejercicio: Ejercicio): Promise<Ejercicio> {
-        const [result] = await db.query('INSERT INTO ejercicios SET ?', [ejercicio]);
-        return { id: result.insertId, ...ejercicio };
+    updateEjercicio(id: number, ejercicio: Ejercicio): Promise<Ejercicio | null> {
+        return new Promise((resolve, reject) => {
+            const sql = 'UPDATE ejercicios SET nombre = ?, descripcion = ? WHERE id = ?';
+            const params = [ejercicio.nombre, ejercicio.descripcion, id];
+            this.db.run(sql, params, function(err) {
+                if (err) return reject(err);
+                if (this.changes === 0) return resolve(null);
+                resolve({ id, ...ejercicio });
+            });
+        });
     }
 
-    async updateEjercicio(id: number, ejercicio: Ejercicio): Promise<Ejercicio | null> {
-        await db.query('UPDATE ejercicios SET ? WHERE id = ?', [ejercicio, id]);
-        return this.getEjercicioById(id);
-    }
-
-    async deleteEjercicio(id: number): Promise<void> {
-        await db.query('DELETE FROM ejercicios WHERE id = ?', [id]);
+    deleteEjercicio(id: number): Promise<void> {
+        return new Promise((resolve, reject) => {
+            this.db.run('DELETE FROM ejercicios WHERE id = ?', [id], (err) => {
+                if (err) return reject(err);
+                resolve();
+            });
+        });
     }
 }
