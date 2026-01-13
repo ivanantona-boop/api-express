@@ -86,12 +86,12 @@ export class UsuarioRepository implements IUsuarioRepository {
     /**
      * Elimina un usuario de la base de datos por su ID.
      */
-    delete(id: number): Promise<void> {
+    delete(id: number): Promise<boolean> {
         return new Promise((resolve, reject) => {
             const sql = 'DELETE FROM usuarios WHERE id = ?';
             this.db.run(sql, [id], (err) => {
                 if (err) return reject(err);
-                resolve();
+                resolve(true);
             });
         });
     }

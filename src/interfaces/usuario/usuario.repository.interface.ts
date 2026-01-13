@@ -4,5 +4,5 @@ export interface UsuarioRepository {
     getById(id: number): Promise<Usuario | null>;
     create(usuario: Usuario): Promise<Usuario>;
     update(id: number, usuario: Usuario): Promise<Usuario | null>;
-    delete(id: number): Promise<void>;
+    delete(id: number): Promise<boolean>;
 }

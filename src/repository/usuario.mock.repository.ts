@@ -27,8 +27,13 @@ export class UsuarioMockRepository implements IUsuarioRepository {
         return this.usuarios[index];
     }
 
-    async delete(id: number): Promise<void> {
+    async delete(id: number): Promise<boolean> {
         // Filtramos el array para eliminar al usuario
+        const usuarioExistente = this.usuarios.find(u => u.id === id);
+        if (!usuarioExistente) {
+            return false; // Usuario no encontrado
+        }
         this.usuarios = this.usuarios.filter(u => u.id !== id);
+        return true;
     }
 }
