@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { usuarioController } from '../container'; // Importas el objeto ya creado
+import { usuarioController } from '../../container'; // Importas el objeto ya creado
 
 const router = Router();
 

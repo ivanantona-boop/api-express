@@ -1,6 +1,6 @@
 // src/controllers/usuario.controller.ts
 import { Request, Response } from 'express';
-import { UsuarioService } from '../services/usuario.service';
+import { UsuarioService } from '../../Apliacacion/services/usuario.service';
 import { UsuarioSchema } from '../schemas/usuario.schema';
 
 export class UsuarioController {

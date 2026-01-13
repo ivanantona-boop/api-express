@@ -1,6 +1,6 @@
-import { Ejercicio } from '../models/ejercicio.model';
+import { Ejercicio } from '../../Dominio/models/ejercicio.model';
 // Importamos la INTERFAZ que creamos antes, no la clase directamente
-import { EjercicioRepository as IEjercicioRepository } from '../repository/ejercicio.repository';
+import { EjercicioRepository as IEjercicioRepository } from '../../Infraestructura/repository/ejercicio.repository';
 
 
 export class EjercicioService {

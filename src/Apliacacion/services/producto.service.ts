@@ -1,6 +1,6 @@
-import { Producto} from '../models/producto.model';
+import { Producto} from '../../Dominio/models/producto.model';
 // Importamos la INTERFAZ que creamos antes, no la clase directamente
-import { ProductoRepository as IProductoRepository} from '../repository/producto.repository';
+import { ProductoRepository as IProductoRepository} from '../../Infraestructura/repository/producto.repository';
 
 export class ProductoService {
     // CAMBIO CLAVE: El servicio ahora "pide" el repositorio al ser creado

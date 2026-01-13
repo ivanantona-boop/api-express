@@ -1,6 +1,6 @@
 import { Database } from 'sqlite3';
-import { Usuario } from '../models/usuario.model';
-import { UsuarioRepository as IUsuarioRepository } from '../interfaces/usuario/usuario.repository.interface';
+import { Usuario } from '../../Dominio/models/usuario.model';
+import { UsuarioRepository as IUsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
 /**
  * Esta clase se encarga exclusivamente de las consultas SQL a la base de datos.

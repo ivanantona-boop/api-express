@@ -1,6 +1,6 @@
-import { Usuario } from '../models/usuario.model';
+import { Usuario } from '../../Dominio/models/usuario.model';
 // Importamos la INTERFAZ que creamos antes, no la clase directamente
-import { UsuarioRepository as IUsuarioRepository } from '../interfaces/usuario/usuario.repository.interface';
+import { UsuarioRepository as IUsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
 export class UsuarioService {
     

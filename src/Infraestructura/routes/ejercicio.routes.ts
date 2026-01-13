@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { ejercicioController} from '../container'; // Importas el objeto ya creado
+import { ejercicioController} from '../../container'; // Importas el objeto ya creado
 
 const router = Router();
 

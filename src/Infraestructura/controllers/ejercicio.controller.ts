@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { EjercicioService } from '../services/ejercicio.service';
+import { EjercicioService } from '../../Apliacacion/services/ejercicio.service';
 import { EjercicioSchema } from '../schemas/ejercicio.schema';
 
 export class EjercicioController {

@@ -1,5 +1,5 @@
-import { Usuario } from '../models/usuario.model';
-import { UsuarioRepository as IUsuarioRepository } from '../interfaces/usuario/usuario.repository.interface';
+import { Usuario } from '../../Dominio/models/usuario.model';
+import { UsuarioRepository as IUsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
 export class UsuarioMockRepository implements IUsuarioRepository {
     private usuarios: Usuario[] = []; // Base de datos temporal en memoria

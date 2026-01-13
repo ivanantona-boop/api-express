@@ -1,16 +1,16 @@
 import db from './database';
-import { UsuarioRepository } from './repository/usuario.repository';
-import { UsuarioMockRepository } from './repository/usuario.mock.repository';   
-import { UsuarioService } from './services/usuario.service';
-import { UsuarioController } from './controllers/usuario.controller';
+import { UsuarioRepository } from './Infraestructura/repository/usuario.repository';
+import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';   
+import { UsuarioService } from './Apliacacion/services/usuario.service';
+import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
 
-import { ProductoRepository } from './repository/producto.repository';
-import { ProductoService } from './services/producto.service';
-import { ProductoController } from './controllers/producto.controller';
+import { ProductoRepository } from './Infraestructura/repository/producto.repository';
+import { ProductoService } from './Apliacacion/services/producto.service';
+import { ProductoController } from './Infraestructura/controllers/producto.controller';
 
-import { EjercicioRepository } from './repository/ejercicio.repository';
-import { EjercicioService } from './services/ejercicio.service';
-import { EjercicioController } from './controllers/ejercicio.controller';
+import { EjercicioRepository } from './Infraestructura/repository/ejercicio.repository';
+import { EjercicioService } from './Apliacacion/services/ejercicio.service';
+import { EjercicioController } from './Infraestructura/controllers/ejercicio.controller';
 
 const isTest = process.env.NODE_ENV === 'test';
 

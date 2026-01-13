@@ -1,5 +1,5 @@
 import request from 'supertest';
-import app from '../app';
+import app from '../../app';
 
 // CONFIGURACIÓN INICIAL
 // Establecemos el entorno en 'test' para que el archivo 'src/container.ts'

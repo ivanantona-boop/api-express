@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { ProductoService } from '../services/producto.service';
+import { ProductoService } from '../../Apliacacion/services/producto.service';
 import { ProductoSchema } from '../schemas/producto.schema';
 
 

@@ -1,7 +1,7 @@
 import express from 'express';
-import productosRouter from './routes/productos.routes';
-import usuariosRouter from './routes/usuario.route';
-import ejercicioRouter from './routes/ejercicio.routes';
+import productosRouter from './Infraestructura/routes/productos.routes';
+import usuariosRouter from './Infraestructura/routes/usuario.route';
+import ejercicioRouter from './Infraestructura/routes/ejercicio.routes';
 
 const app = express();
 
