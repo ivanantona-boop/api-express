@@ -1,4 +1,4 @@
-import { Producto } from "./producto.interface";
+import { Producto } from "./../../models/producto.model";
 export interface ProductoRepository {
     getAll(): Promise<Producto[]>;
     getById(id: number): Promise<Producto | null>;
