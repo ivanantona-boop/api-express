@@ -6,7 +6,7 @@ import { UsuarioController } from './Infraestructura/controllers/usuario.control
 
 import { ProductoRepository } from './Infraestructura/repository/producto.repository';
 import { ProductoService } from './Apliacacion/services/producto.service';
-import { ProductoController } from './Infraestructura/controllers/producto.controller';
+import { ProductoController } from './Infraestructura/controllers/productos.controller';
 
 import { EjercicioRepository } from './Infraestructura/repository/ejercicio.repository';
 import { EjercicioService } from './Apliacacion/services/ejercicio.service';
