@@ -2,20 +2,24 @@
   "compilerOptions": {
     /* Configuración Básica */
     "target": "es2016",
-    "module": "commonjs",                                
+    "module": "commonjs",
     "moduleResolution": "node",
     "esModuleInterop": true,
-    
+
     /* Rutas */
     "outDir": "./dist",
-    "rootDir": "./src",
+    "rootDir": "./src",  /* <--- Aquí está el culpable, pero con el 'include' de abajo se arregla */
 
-    /* Estrictez y Chequeos */
+    /* Estrictez */
     "strict": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true,
-
-    /* Esta es la línea que causaba tu error específico, la desactivamos o quitamos */
-    "verbatimModuleSyntax": false
-  }
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": [
+    "src/**/*"  /* <--- ESTO ES LA SOLUCIÓN: Solo miramos dentro de src */
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.test.ts"
+  ]
 }
