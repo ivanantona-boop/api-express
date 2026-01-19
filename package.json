@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
- "scripts": {
+  "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
     "dev:test": "cross-env NODE_ENV=test ts-node-dev --respawn --transpile-only src/index.ts",
     "build": "tsc",
@@ -17,12 +17,18 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
+    "helmet": "^8.1.0",
     "sqlite3": "^5.1.7",
     "zod": "^4.1.13"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
+    "@types/express-rate-limit": "^5.1.3",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.10.1",
     "@types/sqlite3": "^3.1.11",

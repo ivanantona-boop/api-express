@@ -1,8 +1,13 @@
 import sqlite3 from 'sqlite3';
+import { config } from './Infraestructura/config/env';
 
-const db = new sqlite3.Database('mi_tienda.db', (err) => {
-  if (err) console.error('Error:', err.message);
-  else {
+// Usamos config.DB_PATH en lugar del string fijo 'mi_tienda.db'
+const db = new sqlite3.Database(config.DB_PATH, (err) => {
+  if (err) {
+    console.error(`Error al conectar con la base de datos en ${config.DB_PATH}:`, err.message);
+  } else {
+    console.log(`Base de datos conectada en: ${config.DB_PATH}`);
+
     // Tabla Productos
     db.run(`CREATE TABLE IF NOT EXISTS productos (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -10,7 +15,7 @@ const db = new sqlite3.Database('mi_tienda.db', (err) => {
       precio REAL NOT NULL
     )`);
 
-    // Tabla Usuarios (Sincronizada con apellidos y contraseña)
+    // Tabla Usuarios
     db.run(`CREATE TABLE IF NOT EXISTS usuarios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
@@ -19,7 +24,7 @@ const db = new sqlite3.Database('mi_tienda.db', (err) => {
       contraseña TEXT NOT NULL
     )`);
 
-    // Tabla Ejercicios (Sincronizada con tu repositorio)
+    // Tabla Ejercicios
     db.run(`CREATE TABLE IF NOT EXISTS ejercicios (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       nombre TEXT NOT NULL,
