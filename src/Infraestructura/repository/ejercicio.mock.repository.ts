@@ -1,4 +1,4 @@
-import { Ejercicio } from '../../Dominio/models/ejercicio.model';
+import { Ejercicio } from '../models/ejercicio.model';
 
 /**
  * REPOSITORIO MOCK (SIMULADO)

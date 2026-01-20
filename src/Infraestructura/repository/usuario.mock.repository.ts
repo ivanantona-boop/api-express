@@ -1,39 +1,57 @@
 import { Usuario } from '../../Dominio/models/usuario.model';
-import { UsuarioRepository as IUsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
+import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
-export class UsuarioMockRepository implements IUsuarioRepository {
-    private usuarios: Usuario[] = []; // Base de datos temporal en memoria
+export class UsuarioMockRepository implements UsuarioRepository {
+    // Simulamos la base de datos en un array
+    private usuarios: Usuario[] = [];
 
     async getAll(): Promise<Usuario[]> {
-        return [...this.usuarios]; // Devolvemos una copia para evitar mutaciones externas
+        // Devolvemos una copia para evitar que se modifique el array original por fuera
+        return [...this.usuarios];
     }
 
-    async getById(id: number): Promise<Usuario | null> {
-        return this.usuarios.find(u => u.id === id) || null;
+    // CAMBIO CLAVE: Buscamos por DNI (string), no por ID (number)
+    async getByDNI(dni: string): Promise<Usuario | null> {
+        return this.usuarios.find(u => u.DNI === dni) || null;
     }
 
     async create(usuario: Usuario): Promise<Usuario> {
-        const nuevo = { ...usuario, id: this.usuarios.length + 1 };
-        this.usuarios.push(nuevo);
-        return nuevo;
+        // Simulamos que MongoDB genera un _id automático (un string aleatorio)
+        const nuevoUsuario = { 
+            ...usuario, 
+            id: Math.random().toString(36).substring(2, 15) // Genera un string tipo "a3f12..."
+        };
+        
+        this.usuarios.push(nuevoUsuario);
+        return nuevoUsuario;
     }
 
-    async update(id: number, datosActualizados: Usuario): Promise<Usuario | null> {
-        const index = this.usuarios.findIndex(u => u.id === id);
+    // CAMBIO CLAVE: Actualizamos buscando por DNI y aceptamos datos parciales (Partial<Usuario>)
+    async update(dni: string, datosActualizados: Partial<Usuario>): Promise<Usuario | null> {
+        const index = this.usuarios.findIndex(u => u.DNI === dni);
+        
         if (index === -1) return null;
 
-        // Actualizamos el objeto en el array
-        this.usuarios[index] = { ...datosActualizados, id };
-        return this.usuarios[index];
+        // Mezclamos los datos viejos con los nuevos (Merge)
+        const usuarioActualizado = { 
+            ...this.usuarios[index], 
+            ...datosActualizados 
+        };
+
+        this.usuarios[index] = usuarioActualizado;
+        return usuarioActualizado;
     }
 
-    async delete(id: number): Promise<boolean> {
-        // Filtramos el array para eliminar al usuario
-        const usuarioExistente = this.usuarios.find(u => u.id === id);
-        if (!usuarioExistente) {
-            return false; // Usuario no encontrado
+    // CAMBIO CLAVE: Borramos usando el DNI
+    async delete(dni: string): Promise<boolean> {
+        const indice = this.usuarios.findIndex(u => u.DNI === dni);
+        
+        if (indice === -1) {
+            return false; // No se encontró
         }
-        this.usuarios = this.usuarios.filter(u => u.id !== id);
+
+        // Eliminamos el elemento del array
+        this.usuarios.splice(indice, 1);
         return true;
     }
 }

@@ -1,80 +1,85 @@
-// src/controllers/usuario.controller.ts
 import { Request, Response } from 'express';
-import { UsuarioService } from '../../Apliacacion/services/usuario.service';
+import { UsuarioService } from '../../Aplicacion/services/usuario.service';
 import { UsuarioSchema } from '../schemas/usuario.schema';
 
 export class UsuarioController {
-    // 1. ELIMINAMOS: const usuarioService = new UsuarioService();
-    
-    // 2. AÑADIMOS: El constructor que recibe el servicio
-    constructor(private usuarioService: UsuarioService) {}
 
-    // 3. CAMBIAMOS: Las funciones ahora son métodos de la clase
-    // Usamos arrow functions ( => ) para que el 'this' no se pierda en Express
-    getUsuarios = async (req: Request, res: Response) => {
+    // INYECCIÓN DE DEPENDENCIA:
+    // El controlador recibe el servicio ya montado. No lo crea él mismo.
+    constructor(private readonly usuarioService: UsuarioService) {}
+
+    // Usamos arrow functions para no perder el contexto de 'this'
+    createUsuario = async (req: Request, res: Response) => {
+        // 1. Validar entrada con Zod
+        const validacion = UsuarioSchema.safeParse(req.body);
+        if (!validacion.success) {
+            return res.status(400).json({ error: validacion.error.issues });
+        }
+
         try {
-            const usuarios = await this.usuarioService.getAllUsuarios();
-            res.json(usuarios);
+            // 2. Llamar al servicio
+            const nuevoUsuario = await this.usuarioService.registrarUsuario(validacion.data);
+            res.status(201).json(nuevoUsuario);
         } catch (error: any) {
-            // ERROR 500: Error inesperado de base de datos o lógica
+            // Manejo básico de errores
+            if (error.message.includes('ya existe')) {
+                return res.status(409).json({ error: error.message });
+            }
             res.status(500).json({ error: 'Error interno del servidor' });
         }
     };
 
-    // GET /api/usuarios/:id
-    getUsuarioById = async (req: Request, res: Response) => {
+    getUsuarios = async (req: Request, res: Response) => {
         try {
-            const id = parseInt(req.params.id);
-            if (isNaN(id)) {
-                return res.status(400).json({ error: 'ID inválido' }); // ERROR 400: Parámetro mal formado
-            }
+            const usuarios = await this.usuarioService.obtenerTodos();
+            res.json(usuarios);
+        } catch (error) {
+            res.status(500).json({ error: 'Error al obtener usuarios' });
+        }
+    };
 
-            const usuario = await this.usuarioService.getUsuarioById(id);
-            
+    getUsuarioByDNI = async (req: Request, res: Response) => {
+        const { dni } = req.params;
+        try {
+            const usuario = await this.usuarioService.obtenerPorDNI(dni);
             if (!usuario) {
-                // ERROR 404: El recurso no existe en la base de datos
                 return res.status(404).json({ error: 'Usuario no encontrado' });
             }
-
             res.json(usuario);
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+        } catch (error) {
+            res.status(500).json({ error: 'Error al buscar usuario' });
         }
     };
 
-    // POST /api/usuarios
-    createUsuario = async (req: Request, res: Response) => {
-        // ERROR 400: Los datos no pasan la validación de Zod
-        const result = UsuarioSchema.safeParse(req.body);
-        if (!result.success) {
-            return res.status(400).json({ 
-                error: 'Datos de usuario inválidos', 
-                details: result.error.format() 
-            });
-        }
-
+    updateUsuario = async (req: Request, res: Response) => {
+        const { dni } = req.params;
         try {
-            const newUsuario = await this.usuarioService.createUsuario(result.data);
-            res.status(201).json(newUsuario);
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
-        }
-    };
-
-    // DELETE /api/usuarios/:id
-    deleteUsuario = async (req: Request, res: Response) => {
-        try {
-            const id = parseInt(req.params.id);
-            const existe = await this.usuarioService.getUsuarioById(id);
-            
-            if (!existe) {
-                return res.status(404).json({ error: 'No se puede borrar un usuario que no existe' });
+            // Permitimos actualización parcial (partial())
+            const validacion = UsuarioSchema.partial().safeParse(req.body);
+            if (!validacion.success) {
+                return res.status(400).json({ error: validacion.error.issues });
             }
 
-            await this.usuarioService.deleteUsuario(id);
-            res.status(204).send(); // 204 significa "Éxito, pero no devuelvo contenido"
-        } catch (error: any) {
-            res.status(500).json({ error: error.message });
+            const actualizado = await this.usuarioService.actualizarUsuario(dni, validacion.data);
+            if (!actualizado) {
+                return res.status(404).json({ error: 'Usuario no encontrado para actualizar' });
+            }
+            res.json(actualizado);
+        } catch (error) {
+            res.status(500).json({ error: 'Error al actualizar' });
+        }
+    };
+
+    deleteUsuario = async (req: Request, res: Response) => {
+        const { dni } = req.params;
+        try {
+            const eliminado = await this.usuarioService.eliminarUsuario(dni);
+            if (!eliminado) {
+                return res.status(404).json({ error: 'Usuario no encontrado' });
+            }
+            res.json({ message: 'Usuario eliminado correctamente' });
+        } catch (error) {
+            res.status(500).json({ error: 'Error al eliminar' });
         }
     };
 }

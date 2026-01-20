@@ -1,4 +1,4 @@
-import { Producto} from '../../Dominio/models/producto.model';
+import { Producto} from '../../Infraestructura/models/producto.model';
 // Importamos la INTERFAZ que creamos antes, no la clase directamente
 import { ProductoRepository as IProductoRepository} from '../../Infraestructura/repository/producto.repository';
 

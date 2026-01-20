@@ -1,8 +1,9 @@
-import { Usuario } from '../../models/usuario.model';
+import { Usuario } from '../../../Infraestructura/models/usuario.model';
+
 export interface UsuarioRepository {
-    getAll(): Promise<Usuario[]>;
-    getById(id: number): Promise<Usuario | null>;
     create(usuario: Usuario): Promise<Usuario>;
-    update(id: number, usuario: Usuario): Promise<Usuario | null>;
-    delete(id: number): Promise<boolean>;
+    getAll(): Promise<Usuario[]>;
+    getByDNI(dni: string): Promise<Usuario | null>;
+    update(dni: string, usuario: Partial<Usuario>): Promise<Usuario | null>;
+    delete(dni: string): Promise<boolean>;
 }

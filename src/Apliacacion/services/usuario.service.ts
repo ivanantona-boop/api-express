@@ -1,36 +1,38 @@
+import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 import { Usuario } from '../../Dominio/models/usuario.model';
-// Importamos la INTERFAZ que creamos antes, no la clase directamente
-import { UsuarioRepository as IUsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
 export class UsuarioService {
     
-    // CAMBIO CLAVE: El servicio ahora "pide" el repositorio al ser creado
-    constructor(private usuarioRepo: IUsuarioRepository) {}
+    // INYECCIÓN DE DEPENDENCIA:
+    // No hacemos "new MongoRepository()". Pedimos CUALQUIER cosa que cumpla la interfaz.
+    constructor(private readonly usuarioRepository: UsuarioRepository) {}
 
-    async getAllUsuarios() {
-        // Ahora usamos "this.usuarioRepo" que viene del constructor
-        return await this.usuarioRepo.getAll();
-    }
-    async getUsuarioById(id: number) {
-        return await this.usuarioRepo.getById(id);
-    }
-
-    async createUsuario(data: Usuario) {
-        return await this.usuarioRepo.create(data);
-    }
-    async updateUsuario(id: number, data: Usuario) {
-        const updated = await this.usuarioRepo.update(id, data);
-        if (!updated) {
-            throw new Error('Usuario no encontrado para actualizar');
+    async registrarUsuario(usuario: Usuario): Promise<Usuario> {
+        // Aquí podrías validar si el DNI ya existe antes de intentar crear
+        const existente = await this.usuarioRepository.getByDNI(usuario.DNI);
+        if (existente) {
+            throw new Error(`El usuario con DNI ${usuario.DNI} ya existe`);
         }
-        return { id, ...data };
+        
+        // Aquí deberías hashear la contraseña antes de guardar (ej. bcrypt)
+        // usuario.contraseña = await hash(usuario.contraseña)...
+        
+        return await this.usuarioRepository.create(usuario);
     }
 
-    async deleteUsuario(id: number) {
-        const deleted = await this.usuarioRepo.delete(id);
-        if (!deleted) {
-            throw new Error('Usuario no encontrado para eliminar');
-        }
-        return true;
-    }   
+    async obtenerTodos(): Promise<Usuario[]> {
+        return await this.usuarioRepository.getAll();
+    }
+
+    async obtenerPorDNI(dni: string): Promise<Usuario | null> {
+        return await this.usuarioRepository.getByDNI(dni);
+    }
+
+    async actualizarUsuario(dni: string, datos: Partial<Usuario>): Promise<Usuario | null> {
+        return await this.usuarioRepository.update(dni, datos);
+    }
+
+    async eliminarUsuario(dni: string): Promise<boolean> {
+        return await this.usuarioRepository.delete(dni);
+    }
 }

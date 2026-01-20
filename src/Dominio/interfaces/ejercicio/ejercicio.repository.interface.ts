@@ -1,4 +1,4 @@
-import { Ejercicio } from '../../models/ejercicio.model';
+import { Ejercicio } from '../../../Infraestructura/models/ejercicio.model';
 export interface EjercicioRepository {
     getAll(): Promise<Ejercicio[]>;
     getById(id: number): Promise<Ejercicio | null>;

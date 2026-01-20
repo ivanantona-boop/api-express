@@ -1,11 +1,17 @@
 import app from './app';
-import { config } from './Infraestructura/config/env'; // Importamos la config
+import { connectMongoDB } from './Infraestructura/database/mongo';
+import 'dotenv/config';
 
-// Usamos config.PORT en lugar del número fijo
-const port = config.PORT;
+const PORT = process.env.PORT || 3000;
 
-app.listen(port, () => {
-  // Feedback visual del entorno
-  console.log(`Servidor corriendo en http://localhost:${port}`);
-  console.log(`Entorno: ${config.NODE_ENV}`);
-});
+const start = async () => {
+    // 1. Primero conectamos la BD
+    await connectMongoDB();
+
+    // 2. Luego levantamos el servidor
+    app.listen(PORT, () => {
+        console.log(`🚀 Servidor corriendo en http://localhost:${PORT}`);
+    });
+};
+
+start();

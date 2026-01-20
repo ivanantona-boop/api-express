@@ -1,5 +1,5 @@
 import db from '../../database';
-import {Producto} from '../../Dominio/models/producto.model';
+import {Producto} from '../models/producto.model';
 
 export class ProductoRepository {
     

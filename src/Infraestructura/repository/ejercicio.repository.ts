@@ -1,5 +1,5 @@
 import { Database } from 'sqlite3';
-import { Ejercicio } from '../../Dominio/models/ejercicio.model';
+import { Ejercicio } from '../models/ejercicio.model';
 
 export class EjercicioRepository {
     constructor(private db: Database) {}

@@ -1,5 +1,4 @@
-import db from './database';
-import { UsuarioRepository } from './Infraestructura/repository/usuario.repository';
+import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';   
 import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';   
 import { UsuarioService } from './Apliacacion/services/usuario.service';
 import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
@@ -15,7 +14,7 @@ import { EjercicioController } from './Infraestructura/controllers/ejercicio.con
 const isTest = process.env.NODE_ENV === 'test';
 
 // 1. Repositorios (Inyectando 'db')
-const usuarioRepo = isTest ? new UsuarioMockRepository() : new UsuarioRepository(db);
+const usuarioRepo = isTest ? new UsuarioMockRepository() : new UsuarioMongoRepository();
 const productoRepo = new ProductoRepository(db);
 const ejercicioRepo = new EjercicioRepository(db);
 

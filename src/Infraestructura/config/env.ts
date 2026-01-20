@@ -1,4 +1,3 @@
-// src/Infraestructura/config/env.ts
 import 'dotenv/config'; // Carga las variables del archivo .env automáticamente
 import { z } from 'zod';
 
@@ -6,15 +5,26 @@ const envSchema = z.object({
   // Validamos que PORT sea un número. Si no existe, usa 3000 por defecto.
   PORT: z.coerce.number().min(1000).default(3000),
   
-  // Validamos la ruta de la DB.
-  DB_PATH: z.string().default('./data.db'),
-  
   // Define en qué entorno estamos
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   
-  // CORS: Qué dominios permitimos (ej: "http://mi-frontend.com")
+  // CORS: Qué dominios permitimos
   CORS_ORIGIN: z.string().default('*'), 
+
+  // --- CAMBIOS IMPORTANTES ---
+  
+  // 1. ELIMINADO: DB_PATH (Ya no usamos SQLite)
+
+  // 2. AÑADIDO: Validación para MongoDB
+  // Hacemos que sea obligatorio. Si no está en el .env, la app no arranca.
+  MONGO_URI: z.string().min(1, "Debes definir MONGO_URI en el archivo .env"),
+
+  // 3. AÑADIDO: Variables de JWT (Están en tu .env, mejor validarlas ya)
+  // Las ponemos opcionales (.optional()) por ahora para que no te falle si se te olvida ponerlas,
+  // pero listas para el futuro.
+  JWT_SECRET: z.string().optional(),
+  JWT_EXPIRES_IN: z.string().optional(),
 });
 
-// Parseamos process.env. Si falla, lanza un error explicativo
+// Parseamos process.env. Si falla (ej. falta MONGO_URI), lanza un error explicativo y detiene el servidor.
 export const config = envSchema.parse(process.env);
