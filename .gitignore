@@ -1,6 +1,50 @@
-node_modules
-dist
+# --- Dependencias ---
+node_modules/
+
+# --- Build y Compilación (TypeScript) ---
+dist/
+*.tsbuildinfo
+
+# --- Variables de Entorno y Secretos (CRÍTICO) ---
 .env
+.env.test
+.env.production
+.env.local
+# Excepción: Si creas un ejemplo seguro, sí se sube
+!*.example
+
+# --- Logs y Debug ---
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+*.log
+
+# --- Base de Datos (Restos de SQLite y Dumps de Mongo) ---
 *.db
 *.sqlite
-coverage
+*.sqlite3
+# Si en el futuro haces dumps de mongo locales:
+dump/
+data/db/
+
+# --- Testing y Cobertura ---
+coverage/
+.nyc_output/
+
+# --- IDEs y Sistema Operativo (Archivos basura) ---
+# Mac
+.DS_Store
+# Windows
+Thumbs.db
+# VS Code
+.vscode/
+# IntelliJ / WebStorm / Android Studio
+.idea/
+*.iml
+
+# --- Herramientas de Calidad (ESLint / Prettier) ---
+.eslintcache
+
+# --- Husky (Git Hooks) ---
+# Queremos subir los hooks, pero no los scripts internos autogenerados
+.husky/_
