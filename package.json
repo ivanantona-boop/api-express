@@ -27,6 +27,7 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "mongoose": "^9.1.4",
+    "node-cache": "^5.1.2",
     "swagger-ui-express": "^5.0.1",
     "yaml": "^2.8.2",
     "zod": "^4.1.13"
