@@ -1,14 +1,14 @@
-import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';   
-import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';   
-import { UsuarioService } from './Apliacacion/services/usuario.service';
+import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
+import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';
+import { UsuarioService } from './Aplicacion/services/usuario.service';
 import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
 
 import { ProductoRepository } from './Infraestructura/repository/producto.repository';
-import { ProductoService } from './Apliacacion/services/producto.service';
+import { ProductoService } from './Aplicacion/services/producto.service';
 import { ProductoController } from './Infraestructura/controllers/productos.controller';
 
 import { EjercicioRepository } from './Infraestructura/repository/ejercicio.repository';
-import { EjercicioService } from './Apliacacion/services/ejercicio.service';
+import { EjercicioService } from './Aplicacion/services/ejercicio.service';
 import { EjercicioController } from './Infraestructura/controllers/ejercicio.controller';
 
 const isTest = process.env.NODE_ENV === 'test';
