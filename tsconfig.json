@@ -1,25 +1,30 @@
 {
   "compilerOptions": {
-    /* Configuración Básica */
-    "target": "es2016",
+    /* 1. Configuración del Entorno (Node 18+) */
+    "target": "ES2022",        /* CAMBIO: Node 18 soporta ES2022 nativo. El código resultante es más limpio. */
     "module": "commonjs",
     "moduleResolution": "node",
-    "esModuleInterop": true,
+    "esModuleInterop": true,   /* Permite importar librerías viejas sin problemas */
+    "resolveJsonModule": true, /* Permite hacer 'import data from ./file.json' */
 
-    /* Rutas */
+    /* 2. Rutas y Construcción */
     "outDir": "./dist",
-    "rootDir": "./src",  /* <--- Aquí está el culpable, pero con el 'include' de abajo se arregla */
+    "rootDir": "./src",
+    "sourceMap": true,         /* IMPORTANTE: Genera mapas para poder depurar errores en VS Code */
+    "removeComments": true,    /* Limpia comentarios del código compilado en dist/ */
 
-    /* Estrictez */
+    /* 3. Estrictez (Calidad) */
     "strict": true,
+    "noImplicitAny": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true
   },
   "include": [
-    "src/**/*"  /* <--- ESTO ES LA SOLUCIÓN: Solo miramos dentro de src */
+    "src/**/*"
   ],
   "exclude": [
     "node_modules",
-    "**/*.test.ts"
+    "**/*.test.ts",           /* Correcto: No queremos tests en la carpeta dist/ de producción */
+    "dist"
   ]
 }
