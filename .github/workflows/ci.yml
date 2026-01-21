@@ -1,0 +1,47 @@
+name: CI Pipeline
+
+# ¿Cuándo se ejecuta?
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. Descargar el código
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. Instalar Node.js
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    # 3. Instalar dependencias (npm ci es más rápido y seguro para CI)
+    - name: Install Dependencies
+      run: npm ci
+
+    # 4. Verificar Linting (Opcional, pero recomendado)
+    - name: Run Linter
+      run: npm run lint
+
+    # 5. Compilar (Build)
+    - name: Build Project
+      run: npm run build
+
+    # 6. Correr Tests
+    # IMPORTANTE: Usamos NODE_ENV=test para que use el MockRepository
+    # Así no necesitamos una base de datos Mongo real en el CI.
+    - name: Run Tests
+      run: npm test
+      env:
+        NODE_ENV: test
+        # Aunque usemos Mock, Zod validará que existan estas vars
+        PORT: 3000
+        MONGO_URI: "mongodb://fake-uri-for-ci:27017/test"
