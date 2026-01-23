@@ -1,4 +1,4 @@
-import { Usuario } from '../../Infraestructura/models/usuario.model';
+import { Usuario } from '../../Dominio/models/usuario.model';
 import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 
 export class UsuarioMockRepository implements UsuarioRepository {

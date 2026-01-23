@@ -3,55 +3,61 @@ import { EjercicioService } from '../../Aplicacion/services/ejercicio.service';
 import { EjercicioSchema } from '../schemas/ejercicio.schema';
 
 export class EjercicioController {
-  // 1. ELIMINAMOS: const ejercicioService = new EjercicioService();
-
-  // 2. AÑADIMOS: El constructor que recibe el servicio
-  constructor(private ejercicioService: EjercicioService) {}
-
-  // 3. CAMBIAMOS: Las funciones ahora son métodos de la clase
-  // Usamos arrow functions ( => ) para que el 'this' no se pierda en Express
-  getEjercicios = async (req: Request, res: Response) => {
-    try {
-      const ejercicios = await this.ejercicioService.getAllEjercicios();
-      res.json(ejercicios);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
-    }
-  };
+  constructor(private readonly ejercicioService: EjercicioService) {}
 
   createEjercicio = async (req: Request, res: Response) => {
-    const result = EjercicioSchema.safeParse(req.body);
-    if (!result.success) {
-      res.status(400).json({ error: result.error.format() });
-      return;
+    // 1. VALIDACIÓN CON ZOD
+    const validacion = EjercicioSchema.safeParse(req.body);
+
+    if (!validacion.success) {
+      // Si falla, devolvemos 400 Bad Request y los detalles del error
+      return res.status(400).json({
+        mensaje: 'Datos inválidos',
+        errores: validacion.error.issues,
+      });
     }
+
     try {
-      const newEjercicio = await this.ejercicioService.creacionDeEjercicio(result.data);
-      res.status(201).json(newEjercicio);
-    } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      // 2. Usamos validacion.data (Tipado y limpio)
+      const nuevo = await this.ejercicioService.crearEjercicio(validacion.data);
+      res.status(201).json(nuevo);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al crear ejercicio' });
     }
   };
 
-  updateEjercicio = async (req: Request, res: Response) => {
+  getEjercicios = async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      const validData = EjercicioSchema.parse(req.body);
-      const actualizado = await this.ejercicioService.actualizarEjercicio(id, validData);
-      res.json(actualizado);
-    } catch (error: any) {
-      res.status(404).json({ error: error.message });
+      const lista = await this.ejercicioService.obtenerTodos();
+      res.json(lista);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al obtener ejercicios' });
     }
   };
 
-  // AÑADIR ESTE MÉTODO
+  getEjercicioById = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const ejercicio = await this.ejercicioService.obtenerPorId(id);
+      if (!ejercicio) return res.status(404).json({ error: 'Ejercicio no encontrado' });
+      res.json(ejercicio);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error interno' });
+    }
+  };
+
   deleteEjercicio = async (req: Request, res: Response) => {
     try {
-      const id = parseInt(req.params.id);
-      await this.ejercicioService.eliminarEjercicio(id);
-      res.status(204).send();
-    } catch (error: any) {
-      res.status(404).json({ error: error.message });
+      const { id } = req.params;
+      const eliminado = await this.ejercicioService.eliminarEjercicio(id);
+      if (!eliminado) return res.status(404).json({ error: 'No se pudo eliminar' });
+      res.json({ message: 'Ejercicio eliminado' });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error al eliminar' });
     }
   };
 }

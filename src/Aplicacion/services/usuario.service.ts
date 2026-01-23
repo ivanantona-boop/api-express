@@ -1,5 +1,5 @@
 import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
-import { Usuario } from '../../Infraestructura/models/usuario.model';
+import { Usuario } from '../../Dominio/models/usuario.model';
 import NodeCache from 'node-cache';
 import { DniVO } from '../../Dominio/value-objects/Dni.vo';
 

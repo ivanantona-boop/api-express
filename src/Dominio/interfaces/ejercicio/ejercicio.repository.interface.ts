@@ -1,8 +1,8 @@
-import { Ejercicio } from '../../../Infraestructura/models/ejercicio.model';
+import { Ejercicio } from '../../models/ejercicio.model';
+
 export interface EjercicioRepository {
-    getAll(): Promise<Ejercicio[]>;
-    getById(id: number): Promise<Ejercicio | null>;
-    create(ejercicio: Ejercicio): Promise<Ejercicio>;
-    update(id: number, ejercicio: Ejercicio): Promise<Ejercicio | null>;
-    delete(id: number): Promise<void>;
+  create(ejercicio: Ejercicio): Promise<Ejercicio>;
+  getAll(): Promise<Ejercicio[]>;
+  getById(id: string): Promise<Ejercicio | null>;
+  delete(id: string): Promise<boolean>;
 }

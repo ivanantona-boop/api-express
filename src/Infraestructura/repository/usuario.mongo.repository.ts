@@ -1,5 +1,5 @@
 import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
-import { Usuario } from '../../Infraestructura/models/usuario.model';
+import { Usuario } from '../../Dominio/models/usuario.model';
 import { UsuarioModel } from '../models/UsuarioModel';
 
 export class UsuarioMongoRepository implements UsuarioRepository {
@@ -31,6 +31,7 @@ export class UsuarioMongoRepository implements UsuarioRepository {
   }
 
   // Helper privado para limpiar los datos de Mongo (_id) a tu Dominio (id)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapToDomain(mongoDoc: any): Usuario {
     return {
       id: mongoDoc._id.toString(),
@@ -38,6 +39,12 @@ export class UsuarioMongoRepository implements UsuarioRepository {
       apellidos: mongoDoc.apellidos,
       contraseña: mongoDoc.contraseña,
       DNI: mongoDoc.DNI,
+
+      // Rol es obligatorio en tu interfaz Usuario
+      rol: mongoDoc.rol,
+
+      //  id_entrenador es opcional, lo convertimos a string si existe
+      id_entrenador: mongoDoc.id_entrenador ? mongoDoc.id_entrenador.toString() : undefined,
     };
   }
 }
