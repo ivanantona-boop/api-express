@@ -21,10 +21,10 @@ const SesionSchema = new Schema<SesionEntrenamiento>(
     finalizada: { type: Boolean, default: false },
 
     // RELACIONES
-
-    id_plan: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
-
-    id_usuario: { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    id_plan: { type: Schema.Types.ObjectId as any, ref: 'Plan', required: true },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    id_usuario: { type: Schema.Types.ObjectId as any, ref: 'Usuario', required: true },
 
     // AQUÍ ESTÁ LA MAGIA DE MONGO:
     // En lugar de una tabla 'DetalleSesion' aparte, guardamos un array aquí mismo.
