@@ -1,4 +1,4 @@
-import { PlanRepository } from '../../Dominio/interfaces/plan.repository.interface';
+import { PlanRepository } from '../../Dominio/interfaces/plan/plan.repository.interface';
 import { PlanEntrenamiento } from '../../Dominio/models/plan.model';
 import NodeCache from 'node-cache';
 

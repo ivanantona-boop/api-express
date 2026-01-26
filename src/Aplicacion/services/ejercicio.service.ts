@@ -1,4 +1,4 @@
-import { EjercicioRepository } from '../../Dominio/interfaces/ejercicio.repository.interface';
+import { EjercicioRepository } from '../../Dominio/interfaces/ejercicio/ejercicio.repository.interface';
 import { Ejercicio } from '../../Dominio/models/ejercicio.model';
 import NodeCache from 'node-cache';
 

@@ -1,4 +1,4 @@
-import { SesionRepository } from '../../Dominio/interfaces/sesion.repository.interface';
+import { SesionRepository } from '../../Dominio/interfaces/sesion/sesion.repository.interface';
 import { SesionEntrenamiento } from '../../Dominio/models/sesion.model';
 import NodeCache from 'node-cache';
 

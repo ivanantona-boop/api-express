@@ -21,7 +21,9 @@ const SesionSchema = new Schema<SesionEntrenamiento>(
     finalizada: { type: Boolean, default: false },
 
     // RELACIONES
+
     id_plan: { type: Schema.Types.ObjectId, ref: 'Plan', required: true },
+
     id_usuario: { type: Schema.Types.ObjectId, ref: 'Usuario', required: true },
 
     // AQUÍ ESTÁ LA MAGIA DE MONGO:
@@ -33,5 +35,16 @@ const SesionSchema = new Schema<SesionEntrenamiento>(
     versionKey: false,
   },
 );
+// 3. Limpieza de datos (Quitar _id y __v al devolver JSON)
+SesionSchema.set('toJSON', {
+  virtuals: true,
+  versionKey: false,
+  // 👇 ESLINT: Ignoramos 'any' para poder borrar propiedades de ret
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  transform: function (doc, ret: any) {
+    delete ret._id;
+    delete ret.__v;
+  },
+});
 
 export const SesionModel = model<SesionEntrenamiento>('Sesion', SesionSchema);
