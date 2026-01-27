@@ -2,35 +2,50 @@ import { EjercicioRepository } from '../../Dominio/interfaces/ejercicio/ejercici
 import { Ejercicio } from '../../Dominio/models/ejercicio.model';
 import NodeCache from 'node-cache';
 
+// importación de los casos de uso
+import { CrearEjercicioUseCase } from '../use-cases/ejercicio/crear-ejercicio.use-case';
+import { ListarEjerciciosUseCase } from '../use-cases/ejercicio/listar-ejercicios.use-case';
+import { ObtenerEjercicioPorIdUseCase } from '../use-cases/ejercicio/obtener-ejercicio-por-id.use-case';
+import { EliminarEjercicioUseCase } from '../use-cases/ejercicio/eliminar-ejercicio.use-case';
+
 export class EjercicioService {
-  private cache = new NodeCache({ stdTTL: 600 }); // 10 minutos de caché
-  private readonly CACHE_KEY_ALL = 'ejercicios_all';
+  // definición de propiedades privadas para los casos de uso
+  private readonly crearEjercicioUC: CrearEjercicioUseCase;
+  private readonly listarEjerciciosUC: ListarEjerciciosUseCase;
+  private readonly obtenerEjercicioPorIdUC: ObtenerEjercicioPorIdUseCase;
+  private readonly eliminarEjercicioUC: EliminarEjercicioUseCase;
 
-  constructor(private readonly ejercicioRepository: EjercicioRepository) {}
+  // instancia de caché local
+  private readonly cache: NodeCache;
 
+  constructor(private readonly ejercicioRepository: EjercicioRepository) {
+    // configuración de caché con tiempo de vida de 10 minutos (600 segundos)
+    this.cache = new NodeCache({ stdTTL: 600 });
+
+    // instanciación de los casos de uso inyectando el repositorio y la caché
+    this.crearEjercicioUC = new CrearEjercicioUseCase(this.ejercicioRepository, this.cache);
+    this.listarEjerciciosUC = new ListarEjerciciosUseCase(this.ejercicioRepository, this.cache);
+    this.obtenerEjercicioPorIdUC = new ObtenerEjercicioPorIdUseCase(this.ejercicioRepository);
+    this.eliminarEjercicioUC = new EliminarEjercicioUseCase(this.ejercicioRepository, this.cache);
+  }
+
+  // método fachada para la creación de un nuevo ejercicio
   async crearEjercicio(datos: Ejercicio): Promise<Ejercicio> {
-    // Podrías validar aquí si el nombre ya existe antes de llamar al repo
-    const nuevo = await this.ejercicioRepository.create(datos);
-    this.cache.del(this.CACHE_KEY_ALL); // Invalidar caché
-    return nuevo;
+    return await this.crearEjercicioUC.execute(datos);
   }
 
+  // método fachada para obtener el listado completo de ejercicios
   async obtenerTodos(): Promise<Ejercicio[]> {
-    const enCache = this.cache.get<Ejercicio[]>(this.CACHE_KEY_ALL);
-    if (enCache) return enCache;
-
-    const ejercicios = await this.ejercicioRepository.getAll();
-    this.cache.set(this.CACHE_KEY_ALL, ejercicios);
-    return ejercicios;
+    return await this.listarEjerciciosUC.execute();
   }
 
+  // método fachada para obtener un ejercicio por su identificador
   async obtenerPorId(id: string): Promise<Ejercicio | null> {
-    return await this.ejercicioRepository.getById(id);
+    return await this.obtenerEjercicioPorIdUC.execute(id);
   }
 
+  // método fachada para eliminar un ejercicio
   async eliminarEjercicio(id: string): Promise<boolean> {
-    const eliminado = await this.ejercicioRepository.delete(id);
-    if (eliminado) this.cache.del(this.CACHE_KEY_ALL);
-    return eliminado;
+    return await this.eliminarEjercicioUC.execute(id);
   }
 }

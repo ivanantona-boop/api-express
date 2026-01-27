@@ -1,22 +1,10 @@
 import { Request, Response } from 'express';
 import { PlanSchema } from '../schemas/plan.schema';
-
-// importación de casos de uso
-import { CrearPlanUseCase } from '../../Aplicacion/use-cases/plan/crear-plan.use-case';
-import { ObtenerPlanPorIdUseCase } from '../../Aplicacion/use-cases/plan/obtener-plan-por-id.use-case';
-import { ObtenerPlanesUsuarioUseCase } from '../../Aplicacion/use-cases/plan/obtener-planes-usuario.use-case';
-import { ActualizarPlanUseCase } from '../../Aplicacion/use-cases/plan/actualizar-plan.use-case';
-import { EliminarPlanUseCase } from '../../Aplicacion/use-cases/plan/eliminar-plan.use-case';
+import { PlanService } from '../../Aplicacion/services/plan.service';
 
 export class PlanController {
-  // inyección de dependencias de todos los casos de uso necesarios
-  constructor(
-    private readonly crearPlanUseCase: CrearPlanUseCase,
-    private readonly obtenerPlanPorIdUseCase: ObtenerPlanPorIdUseCase,
-    private readonly obtenerPlanesUsuarioUseCase: ObtenerPlanesUsuarioUseCase,
-    private readonly actualizarPlanUseCase: ActualizarPlanUseCase,
-    private readonly eliminarPlanUseCase: EliminarPlanUseCase,
-  ) {}
+  // inyección del servicio fachada
+  constructor(private readonly planService: PlanService) {}
 
   createPlan = async (req: Request, res: Response) => {
     // validación estricta de datos entrantes
@@ -27,8 +15,8 @@ export class PlanController {
     }
 
     try {
-      // ejecución del caso de uso de creación
-      const nuevo = await this.crearPlanUseCase.execute(validacion.data);
+      // llamada al servicio para crear plan
+      const nuevo = await this.planService.crearPlan(validacion.data);
       res.status(201).json(nuevo);
     } catch (error) {
       console.error(error);
@@ -39,8 +27,8 @@ export class PlanController {
   getPlanById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de recuperación por id
-      const plan = await this.obtenerPlanPorIdUseCase.execute(id);
+      // llamada al servicio para obtener por id
+      const plan = await this.planService.obtenerPorId(id);
 
       if (!plan) return res.status(404).json({ error: 'plan no encontrado' });
       res.json(plan);
@@ -53,8 +41,8 @@ export class PlanController {
   getPlanesByUsuario = async (req: Request, res: Response) => {
     try {
       const { idUsuario } = req.params;
-      // ejecución del caso de uso de listado con caché
-      const planes = await this.obtenerPlanesUsuarioUseCase.execute(idUsuario);
+      // llamada al servicio para obtener planes de un usuario
+      const planes = await this.planService.obtenerPlanesDeUsuario(idUsuario);
       res.json(planes);
     } catch (error) {
       console.error(error);
@@ -73,8 +61,8 @@ export class PlanController {
     }
 
     try {
-      // ejecución del caso de uso de actualización
-      const actualizado = await this.actualizarPlanUseCase.execute(id, validacion.data);
+      // llamada al servicio para actualizar
+      const actualizado = await this.planService.actualizarPlan(id, validacion.data);
 
       if (!actualizado) return res.status(404).json({ error: 'no se pudo actualizar' });
       res.json(actualizado);
@@ -87,8 +75,8 @@ export class PlanController {
   deletePlan = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de eliminación
-      const eliminado = await this.eliminarPlanUseCase.execute(id);
+      // llamada al servicio para eliminar
+      const eliminado = await this.planService.eliminarPlan(id);
 
       if (!eliminado) return res.status(404).json({ error: 'no se pudo eliminar' });
       res.json({ message: 'plan eliminado' });

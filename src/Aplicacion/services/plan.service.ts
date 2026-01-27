@@ -2,54 +2,61 @@ import { PlanRepository } from '../../Dominio/interfaces/plan/plan.repository.in
 import { PlanEntrenamiento } from '../../Dominio/models/plan.model';
 import NodeCache from 'node-cache';
 
+// importación de los casos de uso
+import { CrearPlanUseCase } from '../use-cases/plan/crear-plan.use-case';
+import { ObtenerPlanesUsuarioUseCase } from '../use-cases/plan/obtener-planes-usuario.use-case';
+import { ObtenerPlanPorIdUseCase } from '../use-cases/plan/obtener-plan-por-id.use-case';
+import { ActualizarPlanUseCase } from '../use-cases/plan/actualizar-plan.use-case';
+import { EliminarPlanUseCase } from '../use-cases/plan/eliminar-plan.use-case';
+
 export class PlanService {
-  private cache = new NodeCache({ stdTTL: 300 }); // 5 minutos
+  // definición de propiedades privadas para los casos de uso
+  private readonly crearPlanUC: CrearPlanUseCase;
+  private readonly obtenerPlanesUsuarioUC: ObtenerPlanesUsuarioUseCase;
+  private readonly obtenerPlanPorIdUC: ObtenerPlanPorIdUseCase;
+  private readonly actualizarPlanUC: ActualizarPlanUseCase;
+  private readonly eliminarPlanUC: EliminarPlanUseCase;
 
-  constructor(private readonly planRepository: PlanRepository) {}
+  // instancia de caché local para gestionar la temporalidad de los datos
+  private readonly cache: NodeCache;
 
+  constructor(private readonly planRepository: PlanRepository) {
+    // inicialización de la caché con un tiempo de vida de 5 minutos (300 segundos)
+    this.cache = new NodeCache({ stdTTL: 300 });
+
+    // instanciación de los casos de uso inyectando el repositorio y la caché compartida
+    this.crearPlanUC = new CrearPlanUseCase(this.planRepository, this.cache);
+    this.obtenerPlanesUsuarioUC = new ObtenerPlanesUsuarioUseCase(this.planRepository, this.cache);
+    this.obtenerPlanPorIdUC = new ObtenerPlanPorIdUseCase(this.planRepository);
+    this.actualizarPlanUC = new ActualizarPlanUseCase(this.planRepository, this.cache);
+    this.eliminarPlanUC = new EliminarPlanUseCase(this.planRepository, this.cache);
+  }
+
+  // método fachada para la creación de un nuevo plan
   async crearPlan(plan: PlanEntrenamiento): Promise<PlanEntrenamiento> {
-    // Aquí podrías validar que la fecha de inicio no sea en el pasado
-    const nuevo = await this.planRepository.create(plan);
-    // Invalidamos la caché de ESE usuario específico
-    this.cache.del(`planes_user_${plan.id_usuario}`);
-    return nuevo;
+    return await this.crearPlanUC.execute(plan);
   }
 
+  // método fachada para obtener un plan específico por su identificador
   async obtenerPorId(id: string): Promise<PlanEntrenamiento | null> {
-    return await this.planRepository.getById(id);
+    return await this.obtenerPlanPorIdUC.execute(id);
   }
 
-  // Método clave para la APP: "Dame mis planes"
+  // método fachada para obtener todos los planes asociados a un usuario
   async obtenerPlanesDeUsuario(idUsuario: string): Promise<PlanEntrenamiento[]> {
-    const key = `planes_user_${idUsuario}`;
-    const enCache = this.cache.get<PlanEntrenamiento[]>(key);
-
-    if (enCache) return enCache;
-
-    const planes = await this.planRepository.getByUsuarioId(idUsuario);
-    this.cache.set(key, planes);
-    return planes;
+    return await this.obtenerPlanesUsuarioUC.execute(idUsuario);
   }
 
+  // método fachada para actualizar un plan existente
   async actualizarPlan(
     id: string,
     datos: Partial<PlanEntrenamiento>,
   ): Promise<PlanEntrenamiento | null> {
-    const actualizado = await this.planRepository.update(id, datos);
-    if (actualizado) {
-      this.cache.del(`planes_user_${actualizado.id_usuario}`);
-    }
-    return actualizado;
+    return await this.actualizarPlanUC.execute(id, datos);
   }
 
+  // método fachada para eliminar un plan
   async eliminarPlan(id: string): Promise<boolean> {
-    // Primero obtenemos el plan para saber de qué usuario borrar la caché
-    const plan = await this.planRepository.getById(id);
-    const eliminado = await this.planRepository.delete(id);
-
-    if (eliminado && plan) {
-      this.cache.del(`planes_user_${plan.id_usuario}`);
-    }
-    return eliminado;
+    return await this.eliminarPlanUC.execute(id);
   }
 }

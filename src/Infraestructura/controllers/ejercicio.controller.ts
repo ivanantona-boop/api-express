@@ -1,20 +1,10 @@
 import { Request, Response } from 'express';
 import { EjercicioSchema } from '../schemas/ejercicio.schema';
-
-// importación de casos de uso
-import { CrearEjercicioUseCase } from '../../Aplicacion/use-cases/ejercicio/crear-ejercicio.use-case';
-import { ListarEjerciciosUseCase } from '../../Aplicacion/use-cases/ejercicio/listar-ejercicios.use-case';
-import { ObtenerEjercicioPorIdUseCase } from '../../Aplicacion/use-cases/ejercicio/obtener-ejercicio-por-id.use-case';
-import { EliminarEjercicioUseCase } from '../../Aplicacion/use-cases/ejercicio/eliminar-ejercicio.use-case';
+import { EjercicioService } from '../../Aplicacion/services/ejercicio.service';
 
 export class EjercicioController {
-  // inyección de dependencias de los casos de uso
-  constructor(
-    private readonly crearEjercicioUseCase: CrearEjercicioUseCase,
-    private readonly listarEjerciciosUseCase: ListarEjerciciosUseCase,
-    private readonly obtenerEjercicioPorIdUseCase: ObtenerEjercicioPorIdUseCase,
-    private readonly eliminarEjercicioUseCase: EliminarEjercicioUseCase,
-  ) {}
+  // inyección del servicio fachada
+  constructor(private readonly ejercicioService: EjercicioService) {}
 
   createEjercicio = async (req: Request, res: Response) => {
     // validación de entrada con zod
@@ -28,8 +18,8 @@ export class EjercicioController {
     }
 
     try {
-      // ejecución del caso de uso de creación
-      const nuevo = await this.crearEjercicioUseCase.execute(validacion.data);
+      // llamada al servicio para crear ejercicio
+      const nuevo = await this.ejercicioService.crearEjercicio(validacion.data);
       res.status(201).json(nuevo);
     } catch (error) {
       console.error(error);
@@ -39,8 +29,8 @@ export class EjercicioController {
 
   getEjercicios = async (req: Request, res: Response) => {
     try {
-      // ejecución del caso de uso de listado
-      const lista = await this.listarEjerciciosUseCase.execute();
+      // llamada al servicio para listar ejercicios
+      const lista = await this.ejercicioService.obtenerTodos();
       res.json(lista);
     } catch (error) {
       console.error(error);
@@ -51,8 +41,8 @@ export class EjercicioController {
   getEjercicioById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de búsqueda por id
-      const ejercicio = await this.obtenerEjercicioPorIdUseCase.execute(id);
+      // llamada al servicio para obtener por id
+      const ejercicio = await this.ejercicioService.obtenerPorId(id);
 
       if (!ejercicio) {
         return res.status(404).json({ error: 'ejercicio no encontrado' });
@@ -67,8 +57,8 @@ export class EjercicioController {
   deleteEjercicio = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de eliminación
-      const eliminado = await this.eliminarEjercicioUseCase.execute(id);
+      // llamada al servicio para eliminar
+      const eliminado = await this.ejercicioService.eliminarEjercicio(id);
 
       if (!eliminado) {
         return res.status(404).json({ error: 'no se pudo eliminar' });

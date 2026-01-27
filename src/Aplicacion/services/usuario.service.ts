@@ -1,90 +1,53 @@
 import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 import { Usuario } from '../../Dominio/models/usuario.model';
 import NodeCache from 'node-cache';
-import { DniVO } from '../../Dominio/value-objects/Dni.vo';
+
+// importación de los casos de uso
+import { CrearUsuarioUseCase } from '../use-cases/usuario/crear-usuario.use-case';
+import { ListarUsuariosUseCase } from '../use-cases/usuario/listar-usuarios.use-case';
+import { BuscarUsuarioPorDniUseCase } from '../use-cases/usuario/buscar-usuario-por-dni.use-case';
+import { ActualizarUsuarioUseCase } from '../use-cases/usuario/actualizar-usuario.use-case';
+import { EliminarUsuarioUseCase } from '../use-cases/usuario/eliminar-usuario.use-case';
 
 export class UsuarioService {
-  // Configuración de Caché
-  private cache = new NodeCache({ stdTTL: 300 });
-  private readonly CACHE_KEY_ALL = 'users_all';
+  // declaramos las propiedades de los casos de uso
+  private readonly crearUsuarioUC: CrearUsuarioUseCase;
+  private readonly listarUsuariosUC: ListarUsuariosUseCase;
+  private readonly buscarUsuarioPorDniUC: BuscarUsuarioPorDniUseCase;
+  private readonly actualizarUsuarioUC: ActualizarUsuarioUseCase;
+  private readonly eliminarUsuarioUC: EliminarUsuarioUseCase;
 
-  constructor(private readonly usuarioRepository: UsuarioRepository) {}
-
-  // --- LECTURA ---
-
-  async obtenerTodos(): Promise<Usuario[]> {
-    const datosEnCache = this.cache.get<Usuario[]>(this.CACHE_KEY_ALL);
-
-    if (datosEnCache) {
-      console.log('⚡ Cache HIT: Devolviendo usuarios desde memoria RAM');
-      return datosEnCache;
-    }
-
-    console.log('🐌 Cache MISS: Consultando MongoDB...');
-    const usuarios = await this.usuarioRepository.getAll();
-    this.cache.set(this.CACHE_KEY_ALL, usuarios);
-
-    return usuarios;
+  constructor(
+    private readonly usuarioRepository: UsuarioRepository,
+    private readonly cache: NodeCache,
+  ) {
+    // instanciamos los casos de uso dentro del servicio (igual que tu tutor)
+    this.crearUsuarioUC = new CrearUsuarioUseCase(this.usuarioRepository, this.cache);
+    this.listarUsuariosUC = new ListarUsuariosUseCase(this.usuarioRepository, this.cache);
+    this.buscarUsuarioPorDniUC = new BuscarUsuarioPorDniUseCase(this.usuarioRepository);
+    this.actualizarUsuarioUC = new ActualizarUsuarioUseCase(this.usuarioRepository, this.cache);
+    this.eliminarUsuarioUC = new EliminarUsuarioUseCase(this.usuarioRepository, this.cache);
   }
 
-  async obtenerPorDNI(dni: string): Promise<Usuario | null> {
-    const dniVO = DniVO.crear(dni);
-    return await this.usuarioRepository.getByDNI(dniVO.getValue());
+  // métodos fachada: el controlador llama aquí, y esto llama al caso de uso
+
+  async registrarUsuario(usuario: Usuario) {
+    return await this.crearUsuarioUC.execute(usuario);
   }
 
-  // --- ESCRITURA (CORREGIDA) ---
-
-  async registrarUsuario(usuario: Usuario): Promise<Usuario> {
-    // 1. Usamos el Value Object para validar y normalizar
-    const dniVO = DniVO.crear(usuario.DNI);
-
-    // 2. Creamos el objeto limpio
-    const usuarioLimpio = {
-      ...usuario,
-      DNI: dniVO.getValue(), // Guardamos el DNI limpio (ej: "1234A")
-    };
-
-    // Validación: buscamos si ya existe usando el DNI limpio
-    const existente = await this.usuarioRepository.getByDNI(dniVO.getValue());
-    if (existente) {
-      throw new Error(`El usuario con DNI ${dniVO.getValue()} ya existe`);
-    }
-
-    // ✅ CORRECCIÓN AQUÍ:
-    // Antes pasabas 'usuario', ahora pasamos 'usuarioLimpio'
-    // Así ESLint deja de quejarse y la BD recibe el dato correcto.
-    const nuevoUsuario = await this.usuarioRepository.create(usuarioLimpio);
-
-    // Invalidar caché
-    this.cache.del(this.CACHE_KEY_ALL);
-
-    return nuevoUsuario;
+  async obtenerTodos() {
+    return await this.listarUsuariosUC.execute();
   }
 
-  async actualizarUsuario(dni: string, datos: Partial<Usuario>): Promise<Usuario | null> {
-    const dniBusqueda = DniVO.crear(dni).getValue();
-
-    const datosLimpios = { ...datos };
-    if (datos.DNI) {
-      const dniVO = DniVO.crear(datos.DNI);
-      datosLimpios.DNI = dniVO.getValue();
-    }
-
-    const usuarioActualizado = await this.usuarioRepository.update(dniBusqueda, datosLimpios);
-
-    if (usuarioActualizado) {
-      this.cache.del(this.CACHE_KEY_ALL);
-    }
-    return usuarioActualizado;
+  async obtenerPorDNI(dni: string) {
+    return await this.buscarUsuarioPorDniUC.execute(dni);
   }
 
-  async eliminarUsuario(dni: string): Promise<boolean> {
-    const dniLimpio = DniVO.crear(dni).getValue();
-    const eliminado = await this.usuarioRepository.delete(dniLimpio);
+  async actualizarUsuario(dni: string, datos: Partial<Usuario>) {
+    return await this.actualizarUsuarioUC.execute(dni, datos);
+  }
 
-    if (eliminado) {
-      this.cache.del(this.CACHE_KEY_ALL);
-    }
-    return eliminado;
+  async eliminarUsuario(dni: string) {
+    return await this.eliminarUsuarioUC.execute(dni);
   }
 }

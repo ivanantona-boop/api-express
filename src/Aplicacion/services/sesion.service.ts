@@ -2,53 +2,61 @@ import { SesionRepository } from '../../Dominio/interfaces/sesion/sesion.reposit
 import { SesionEntrenamiento } from '../../Dominio/models/sesion.model';
 import NodeCache from 'node-cache';
 
+// importación de los casos de uso
+import { CrearSesionUseCase } from '../use-cases/sesion/crear-sesion.use-case';
+import { ObtenerSesionesPlanUseCase } from '../use-cases/sesion/obtener-sesiones-plan.use-case';
+import { ObtenerSesionPorIdUseCase } from '../use-cases/sesion/obtener-sesion-por-id.use-case';
+import { ActualizarSesionUseCase } from '../use-cases/sesion/actualizar-sesion.use-case';
+import { EliminarSesionUseCase } from '../use-cases/sesion/eliminar-sesion.use-case';
+
 export class SesionService {
-  // Las sesiones cambian mucho (se marcan checks, se editan pesos),
-  // ponemos un TTL (Tiempo de vida) bajo.
-  private cache = new NodeCache({ stdTTL: 60 });
+  // definición de propiedades privadas para los casos de uso
+  private readonly crearSesionUC: CrearSesionUseCase;
+  private readonly obtenerSesionesPlanUC: ObtenerSesionesPlanUseCase;
+  private readonly obtenerSesionPorIdUC: ObtenerSesionPorIdUseCase;
+  private readonly actualizarSesionUC: ActualizarSesionUseCase;
+  private readonly eliminarSesionUC: EliminarSesionUseCase;
 
-  constructor(private readonly sesionRepository: SesionRepository) {}
+  // mantenemos una instancia de caché privada con ttl corto (60s) como tenías originalmente
+  private readonly cache: NodeCache;
 
+  constructor(private readonly sesionRepository: SesionRepository) {
+    // configuración de caché específica para sesiones (datos muy volátiles)
+    this.cache = new NodeCache({ stdTTL: 60 });
+
+    // instanciación de los casos de uso inyectando repositorio y caché
+    this.crearSesionUC = new CrearSesionUseCase(this.sesionRepository, this.cache);
+    this.obtenerSesionesPlanUC = new ObtenerSesionesPlanUseCase(this.sesionRepository, this.cache);
+    this.obtenerSesionPorIdUC = new ObtenerSesionPorIdUseCase(this.sesionRepository);
+    this.actualizarSesionUC = new ActualizarSesionUseCase(this.sesionRepository, this.cache);
+    this.eliminarSesionUC = new EliminarSesionUseCase(this.sesionRepository, this.cache);
+  }
+
+  // método fachada para crear sesión
   async crearSesion(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento> {
-    const nueva = await this.sesionRepository.create(sesion);
-    this.cache.del(`sesiones_plan_${sesion.id_plan}`);
-    return nueva;
+    return await this.crearSesionUC.execute(sesion);
   }
 
+  // método fachada para obtener sesión por id
   async obtenerPorId(id: string): Promise<SesionEntrenamiento | null> {
-    return await this.sesionRepository.getById(id);
+    return await this.obtenerSesionPorIdUC.execute(id);
   }
 
-  // Método clave para la APP: "Cargar rutina de hoy"
+  // método fachada para obtener sesiones de un plan
   async obtenerSesionesDelPlan(idPlan: string): Promise<SesionEntrenamiento[]> {
-    const key = `sesiones_plan_${idPlan}`;
-    const enCache = this.cache.get<SesionEntrenamiento[]>(key);
-
-    if (enCache) return enCache;
-
-    const sesiones = await this.sesionRepository.getByPlanId(idPlan);
-    this.cache.set(key, sesiones);
-    return sesiones;
+    return await this.obtenerSesionesPlanUC.execute(idPlan);
   }
 
+  // método fachada para actualizar sesión
   async actualizarSesion(
     id: string,
     datos: Partial<SesionEntrenamiento>,
   ): Promise<SesionEntrenamiento | null> {
-    const actualizada = await this.sesionRepository.update(id, datos);
-    if (actualizada) {
-      this.cache.del(`sesiones_plan_${actualizada.id_plan}`);
-    }
-    return actualizada;
+    return await this.actualizarSesionUC.execute(id, datos);
   }
 
+  // método fachada para eliminar sesión
   async eliminarSesion(id: string): Promise<boolean> {
-    const sesion = await this.sesionRepository.getById(id);
-    const eliminado = await this.sesionRepository.delete(id);
-
-    if (eliminado && sesion) {
-      this.cache.del(`sesiones_plan_${sesion.id_plan}`);
-    }
-    return eliminado;
+    return await this.eliminarSesionUC.execute(id);
   }
 }

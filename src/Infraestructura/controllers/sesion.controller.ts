@@ -1,22 +1,10 @@
 import { Request, Response } from 'express';
 import { SesionSchema } from '../schemas/sesion.schema';
-
-// importación de casos de uso
-import { CrearSesionUseCase } from '../../Aplicacion/use-cases/sesion/crear-sesion.use-case';
-import { ObtenerSesionPorIdUseCase } from '../../Aplicacion/use-cases/sesion/obtener-sesion-por-id.use-case';
-import { ObtenerSesionesPlanUseCase } from '../../Aplicacion/use-cases/sesion/obtener-sesiones-plan.use-case';
-import { ActualizarSesionUseCase } from '../../Aplicacion/use-cases/sesion/actualizar-sesion.use-case';
-import { EliminarSesionUseCase } from '../../Aplicacion/use-cases/sesion/eliminar-sesion.use-case';
+import { SesionService } from '../../Aplicacion/services/sesion.service';
 
 export class SesionController {
-  // inyección de dependencias de todos los casos de uso necesarios
-  constructor(
-    private readonly crearSesionUseCase: CrearSesionUseCase,
-    private readonly obtenerSesionPorIdUseCase: ObtenerSesionPorIdUseCase,
-    private readonly obtenerSesionesPlanUseCase: ObtenerSesionesPlanUseCase,
-    private readonly actualizarSesionUseCase: ActualizarSesionUseCase,
-    private readonly eliminarSesionUseCase: EliminarSesionUseCase,
-  ) {}
+  // inyección del servicio fachada
+  constructor(private readonly sesionService: SesionService) {}
 
   createSesion = async (req: Request, res: Response) => {
     // validación de estructura de datos entrantes
@@ -27,8 +15,8 @@ export class SesionController {
     }
 
     try {
-      // ejecución del caso de uso de creación
-      const nueva = await this.crearSesionUseCase.execute(validacion.data);
+      // llamada al servicio para crear sesión
+      const nueva = await this.sesionService.crearSesion(validacion.data);
       res.status(201).json(nueva);
     } catch (error) {
       console.error(error);
@@ -39,8 +27,8 @@ export class SesionController {
   getSesionById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de recuperación por id
-      const sesion = await this.obtenerSesionPorIdUseCase.execute(id);
+      // llamada al servicio para obtener por id
+      const sesion = await this.sesionService.obtenerPorId(id);
 
       if (!sesion) return res.status(404).json({ error: 'sesión no encontrada' });
       res.json(sesion);
@@ -53,8 +41,8 @@ export class SesionController {
   getSesionesByPlan = async (req: Request, res: Response) => {
     try {
       const { idPlan } = req.params;
-      // ejecución del caso de uso de listado con caché
-      const sesiones = await this.obtenerSesionesPlanUseCase.execute(idPlan);
+      // llamada al servicio para obtener sesiones de un plan
+      const sesiones = await this.sesionService.obtenerSesionesDelPlan(idPlan);
       res.json(sesiones);
     } catch (error) {
       console.error(error);
@@ -73,8 +61,8 @@ export class SesionController {
     }
 
     try {
-      // ejecución del caso de uso de actualización
-      const actualizada = await this.actualizarSesionUseCase.execute(id, validacion.data);
+      // llamada al servicio para actualizar
+      const actualizada = await this.sesionService.actualizarSesion(id, validacion.data);
 
       if (!actualizada) return res.status(404).json({ error: 'no se pudo actualizar' });
       res.json(actualizada);
@@ -87,8 +75,8 @@ export class SesionController {
   deleteSesion = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      // ejecución del caso de uso de eliminación
-      const eliminada = await this.eliminarSesionUseCase.execute(id);
+      // llamada al servicio para eliminar
+      const eliminada = await this.sesionService.eliminarSesion(id);
 
       if (!eliminada) return res.status(404).json({ error: 'no se pudo eliminar' });
       res.json({ message: 'sesión eliminada' });
