@@ -13,6 +13,13 @@ import { ListarEjerciciosUseCase } from './Aplicacion/use-cases/ejercicio/listar
 import { ObtenerEjercicioPorIdUseCase } from './Aplicacion/use-cases/ejercicio/obtener-ejercicio-por-id.use-case';
 import { EliminarEjercicioUseCase } from './Aplicacion/use-cases/ejercicio/eliminar-ejercicio.use-case';
 
+// importación de casos de uso de plan
+import { CrearPlanUseCase } from './Aplicacion/use-cases/plan/crear-plan.use-case';
+import { ObtenerPlanesUsuarioUseCase } from './Aplicacion/use-cases/plan/obtener-planes-usuario.use-case';
+import { ObtenerPlanPorIdUseCase } from './Aplicacion/use-cases/plan/obtener-plan-por-id.use-case';
+import { ActualizarPlanUseCase } from './Aplicacion/use-cases/plan/actualizar-plan.use-case';
+import { EliminarPlanUseCase } from './Aplicacion/use-cases/plan/eliminar-plan.use-case';
+
 // importación de repositorios
 import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
 import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';
@@ -24,7 +31,6 @@ import { SesionMongoRepository } from './Infraestructura/repository/sesion.mongo
 import { SesionMockRepository } from './Infraestructura/repository/sesion.mock.repository';
 
 // importación de servicios (entidades pendientes de migrar)
-import { PlanService } from './Aplicacion/services/plan.service';
 import { SesionService } from './Aplicacion/services/sesion.service';
 
 // importación de controladores
@@ -63,8 +69,14 @@ const listarEjerciciosUseCase = new ListarEjerciciosUseCase(ejercicioRepo, appCa
 const obtenerEjercicioPorIdUseCase = new ObtenerEjercicioPorIdUseCase(ejercicioRepo);
 const eliminarEjercicioUseCase = new EliminarEjercicioUseCase(ejercicioRepo, appCache);
 
+// casos de uso plan
+const crearPlanUseCase = new CrearPlanUseCase(planRepo, appCache);
+const obtenerPlanesUsuarioUseCase = new ObtenerPlanesUsuarioUseCase(planRepo, appCache);
+const obtenerPlanPorIdUseCase = new ObtenerPlanPorIdUseCase(planRepo);
+const actualizarPlanUseCase = new ActualizarPlanUseCase(planRepo, appCache);
+const eliminarPlanUseCase = new EliminarPlanUseCase(planRepo, appCache);
+
 // servicios restantes
-const planService = new PlanService(planRepo);
 const sesionService = new SesionService(sesionRepo);
 
 // =============================================================
@@ -86,7 +98,14 @@ const ejercicioController = new EjercicioController(
   eliminarEjercicioUseCase,
 );
 
-const planController = new PlanController(planService);
+const planController = new PlanController(
+  crearPlanUseCase,
+  obtenerPlanPorIdUseCase,
+  obtenerPlanesUsuarioUseCase,
+  actualizarPlanUseCase,
+  eliminarPlanUseCase,
+);
+
 const sesionController = new SesionController(sesionService);
 
 // =============================================================
