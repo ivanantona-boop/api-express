@@ -20,6 +20,13 @@ import { ObtenerPlanPorIdUseCase } from './Aplicacion/use-cases/plan/obtener-pla
 import { ActualizarPlanUseCase } from './Aplicacion/use-cases/plan/actualizar-plan.use-case';
 import { EliminarPlanUseCase } from './Aplicacion/use-cases/plan/eliminar-plan.use-case';
 
+// importación de casos de uso de sesión
+import { CrearSesionUseCase } from './Aplicacion/use-cases/sesion/crear-sesion.use-case';
+import { ObtenerSesionesPlanUseCase } from './Aplicacion/use-cases/sesion/obtener-sesiones-plan.use-case';
+import { ObtenerSesionPorIdUseCase } from './Aplicacion/use-cases/sesion/obtener-sesion-por-id.use-case';
+import { ActualizarSesionUseCase } from './Aplicacion/use-cases/sesion/actualizar-sesion.use-case';
+import { EliminarSesionUseCase } from './Aplicacion/use-cases/sesion/eliminar-sesion.use-case';
+
 // importación de repositorios
 import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
 import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';
@@ -29,9 +36,6 @@ import { PlanMongoRepository } from './Infraestructura/repository/plan.mongo.rep
 import { PlanMockRepository } from './Infraestructura/repository/plan.mock.repository';
 import { SesionMongoRepository } from './Infraestructura/repository/sesion.mongo.repository';
 import { SesionMockRepository } from './Infraestructura/repository/sesion.mock.repository';
-
-// importación de servicios (entidades pendientes de migrar)
-import { SesionService } from './Aplicacion/services/sesion.service';
 
 // importación de controladores
 import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
@@ -53,7 +57,7 @@ const planRepo = isTest ? new PlanMockRepository() : new PlanMongoRepository();
 const sesionRepo = isTest ? new SesionMockRepository() : new SesionMongoRepository();
 
 // =============================================================
-// capa 2: aplicación (casos de uso y servicios)
+// capa 2: aplicación (casos de uso)
 // =============================================================
 
 // casos de uso usuario
@@ -76,8 +80,12 @@ const obtenerPlanPorIdUseCase = new ObtenerPlanPorIdUseCase(planRepo);
 const actualizarPlanUseCase = new ActualizarPlanUseCase(planRepo, appCache);
 const eliminarPlanUseCase = new EliminarPlanUseCase(planRepo, appCache);
 
-// servicios restantes
-const sesionService = new SesionService(sesionRepo);
+// casos de uso sesión
+const crearSesionUseCase = new CrearSesionUseCase(sesionRepo, appCache);
+const obtenerSesionesPlanUseCase = new ObtenerSesionesPlanUseCase(sesionRepo, appCache);
+const obtenerSesionPorIdUseCase = new ObtenerSesionPorIdUseCase(sesionRepo);
+const actualizarSesionUseCase = new ActualizarSesionUseCase(sesionRepo, appCache);
+const eliminarSesionUseCase = new EliminarSesionUseCase(sesionRepo, appCache);
 
 // =============================================================
 // capa 3: infraestructura (controladores)
@@ -106,7 +114,13 @@ const planController = new PlanController(
   eliminarPlanUseCase,
 );
 
-const sesionController = new SesionController(sesionService);
+const sesionController = new SesionController(
+  crearSesionUseCase,
+  obtenerSesionPorIdUseCase,
+  obtenerSesionesPlanUseCase,
+  actualizarSesionUseCase,
+  eliminarSesionUseCase,
+);
 
 // =============================================================
 // exportación del contenedor de dependencias
