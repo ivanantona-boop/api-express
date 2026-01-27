@@ -1,62 +1,81 @@
-// --- 1. USUARIO (Ya migrado y funcionando) ---
+import NodeCache from 'node-cache';
+
+// importación de casos de uso de usuario
+import { CrearUsuarioUseCase } from './Aplicacion/use-cases/usuario/crear-usuario.use-case';
+import { ListarUsuariosUseCase } from './Aplicacion/use-cases/usuario/listar-usuarios.use-case';
+import { BuscarUsuarioPorDniUseCase } from './Aplicacion/use-cases/usuario/buscar-usuario-por-dni.use-case';
+import { ActualizarUsuarioUseCase } from './Aplicacion/use-cases/usuario/actualizar-usuario.use-case';
+import { EliminarUsuarioUseCase } from './Aplicacion/use-cases/usuario/eliminar-usuario.use-case';
+
+// importación de repositorios
 import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
 import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';
-import { UsuarioService } from './Aplicacion/services/usuario.service';
-import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
-
-// --- 2. EJERCICIO (Repositorios nuevos)  ---
 import { EjercicioMongoRepository } from './Infraestructura/repository/ejercicio.mongo.repository';
 import { EjercicioMockRepository } from './Infraestructura/repository/ejercicio.mock.repository';
-import { EjercicioService } from './Aplicacion/services/ejercicio.service';
-import { EjercicioController } from './Infraestructura/controllers/ejercicio.controller';
-
-// --- 3. PLAN DE ENTRENAMIENTO (Repositorios nuevos) ---
 import { PlanMongoRepository } from './Infraestructura/repository/plan.mongo.repository';
 import { PlanMockRepository } from './Infraestructura/repository/plan.mock.repository';
-import { PlanService } from './Aplicacion/services/plan.service';
-import { PlanController } from './Infraestructura/controllers/plan.controller';
-
-// --- 4. SESIÓN (Repositorios nuevos) ---
 import { SesionMongoRepository } from './Infraestructura/repository/sesion.mongo.repository';
 import { SesionMockRepository } from './Infraestructura/repository/sesion.mock.repository';
+
+// importación de servicios (entidades no migradas a casos de uso)
+import { EjercicioService } from './Aplicacion/services/ejercicio.service';
+import { PlanService } from './Aplicacion/services/plan.service';
 import { SesionService } from './Aplicacion/services/sesion.service';
+
+// importación de controladores
+import { UsuarioController } from './Infraestructura/controllers/usuario.controller';
+import { EjercicioController } from './Infraestructura/controllers/ejercicio.controller';
+import { PlanController } from './Infraestructura/controllers/plan.controller';
 import { SesionController } from './Infraestructura/controllers/sesion.controller';
 
+// configuración general y caché compartida
 const isTest = process.env.NODE_ENV === 'test';
+const appCache = new NodeCache({ stdTTL: 300 });
 
 // =============================================================
-// CAPA 1: REPOSITORIOS (Infraestructura - Acceso a Datos)
+// capa 1: infraestructura (repositorios)
 // =============================================================
 
-// Usuario
+// selección de repositorio según el entorno (test o producción)
 const usuarioRepo = isTest ? new UsuarioMockRepository() : new UsuarioMongoRepository();
-
-// Nuevas Entidades (Ya conectadas a Mongo)
 const ejercicioRepo = isTest ? new EjercicioMockRepository() : new EjercicioMongoRepository();
 const planRepo = isTest ? new PlanMockRepository() : new PlanMongoRepository();
 const sesionRepo = isTest ? new SesionMockRepository() : new SesionMongoRepository();
 
 // =============================================================
-// CAPA 2: SERVICIOS (Aplicación - Lógica de Negocio)
+// capa 2: aplicación (casos de uso y servicios)
 // =============================================================
 
-const usuarioService = new UsuarioService(usuarioRepo);
+// instanciación de casos de uso para usuario (inyección de repositorio y caché)
+const crearUsuarioUseCase = new CrearUsuarioUseCase(usuarioRepo, appCache);
+const listarUsuariosUseCase = new ListarUsuariosUseCase(usuarioRepo, appCache);
+const buscarUsuarioPorDniUseCase = new BuscarUsuarioPorDniUseCase(usuarioRepo);
+const actualizarUsuarioUseCase = new ActualizarUsuarioUseCase(usuarioRepo, appCache);
+const eliminarUsuarioUseCase = new EliminarUsuarioUseCase(usuarioRepo, appCache);
 
+// instanciación de servicios para el resto de entidades
 const ejercicioService = new EjercicioService(ejercicioRepo);
 const planService = new PlanService(planRepo);
 const sesionService = new SesionService(sesionRepo);
 
 // =============================================================
-// CAPA 3: CONTROLADORES (Infraestructura - Rutas HTTP)
+// capa 3: infraestructura (controladores)
 // =============================================================
 
-const usuarioController = new UsuarioController(usuarioService);
+// inyección de dependencias en los controladores
+const usuarioController = new UsuarioController(
+  crearUsuarioUseCase,
+  listarUsuariosUseCase,
+  buscarUsuarioPorDniUseCase,
+  actualizarUsuarioUseCase,
+  eliminarUsuarioUseCase,
+);
 
 const ejercicioController = new EjercicioController(ejercicioService);
 const planController = new PlanController(planService);
 const sesionController = new SesionController(sesionService);
 
 // =============================================================
-// EXPORTAR
+// exportación del contenedor de dependencias
 // =============================================================
 export { usuarioController, ejercicioController, planController, sesionController };

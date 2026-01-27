@@ -1,37 +1,39 @@
 import { Request, Response } from 'express';
-import { UsuarioService } from '../../Aplicacion/services/usuario.service';
 import { UsuarioSchema } from '../schemas/usuario.schema';
 
-export class UsuarioController {
-  // INYECCIÓN DE DEPENDENCIA:
-  // El controlador recibe el servicio ya montado. No lo crea él mismo.
-  constructor(private readonly usuarioService: UsuarioService) {}
+// Imports de Use Cases
+import { CrearUsuarioUseCase } from '../../Aplicacion/use-cases/usuario/crear-usuario.use-case';
+import { ListarUsuariosUseCase } from '../../Aplicacion/use-cases/usuario/listar-usuarios.use-case';
+import { BuscarUsuarioPorDniUseCase } from '../../Aplicacion/use-cases/usuario/buscar-usuario-por-dni.use-case';
+import { ActualizarUsuarioUseCase } from '../../Aplicacion/use-cases/usuario/actualizar-usuario.use-case';
+import { EliminarUsuarioUseCase } from '../../Aplicacion/use-cases/usuario/eliminar-usuario.use-case';
 
-  // Usamos arrow functions para no perder el contexto de 'this'
+export class UsuarioController {
+  constructor(
+    private readonly crearUsuarioUseCase: CrearUsuarioUseCase,
+    private readonly listarUsuariosUseCase: ListarUsuariosUseCase,
+    private readonly buscarUsuarioPorDniUseCase: BuscarUsuarioPorDniUseCase,
+    private readonly actualizarUsuarioUseCase: ActualizarUsuarioUseCase,
+    private readonly eliminarUsuarioUseCase: EliminarUsuarioUseCase,
+  ) {}
+
   createUsuario = async (req: Request, res: Response) => {
-    // 1. Validar entrada con Zod
     const validacion = UsuarioSchema.safeParse(req.body);
-    if (!validacion.success) {
-      return res.status(400).json({ error: validacion.error.issues });
-    }
+    if (!validacion.success) return res.status(400).json({ error: validacion.error.issues });
 
     try {
-      // 2. Llamar al servicio
-      const nuevoUsuario = await this.usuarioService.registrarUsuario(validacion.data);
-      res.status(201).json(nuevoUsuario);
+      const nuevo = await this.crearUsuarioUseCase.execute(validacion.data);
+      res.status(201).json(nuevo);
     } catch (error: any) {
       console.error(error);
-      // Manejo básico de errores
-      if (error.message.includes('ya existe')) {
-        return res.status(409).json({ error: error.message });
-      }
-      res.status(500).json({ error: 'Error interno del servidor' });
+      if (error.message.includes('existe')) return res.status(409).json({ error: error.message });
+      res.status(500).json({ error: 'Error interno' });
     }
   };
 
   getUsuarios = async (req: Request, res: Response) => {
     try {
-      const usuarios = await this.usuarioService.obtenerTodos();
+      const usuarios = await this.listarUsuariosUseCase.execute();
       res.json(usuarios);
     } catch (error) {
       console.error(error);
@@ -40,12 +42,9 @@ export class UsuarioController {
   };
 
   getUsuarioByDNI = async (req: Request, res: Response) => {
-    const { dni } = req.params;
     try {
-      const usuario = await this.usuarioService.obtenerPorDNI(dni);
-      if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const usuario = await this.buscarUsuarioPorDniUseCase.execute(req.params.dni);
+      if (!usuario) return res.status(404).json({ error: 'Usuario no encontrado' });
       res.json(usuario);
     } catch (error) {
       console.error(error);
@@ -54,18 +53,15 @@ export class UsuarioController {
   };
 
   updateUsuario = async (req: Request, res: Response) => {
-    const { dni } = req.params;
     try {
-      // Permitimos actualización parcial (partial())
       const validacion = UsuarioSchema.partial().safeParse(req.body);
-      if (!validacion.success) {
-        return res.status(400).json({ error: validacion.error.issues });
-      }
+      if (!validacion.success) return res.status(400).json({ error: validacion.error.issues });
 
-      const actualizado = await this.usuarioService.actualizarUsuario(dni, validacion.data);
-      if (!actualizado) {
-        return res.status(404).json({ error: 'Usuario no encontrado para actualizar' });
-      }
+      const actualizado = await this.actualizarUsuarioUseCase.execute(
+        req.params.dni,
+        validacion.data,
+      );
+      if (!actualizado) return res.status(404).json({ error: 'Usuario no encontrado' });
       res.json(actualizado);
     } catch (error) {
       console.error(error);
@@ -74,12 +70,9 @@ export class UsuarioController {
   };
 
   deleteUsuario = async (req: Request, res: Response) => {
-    const { dni } = req.params;
     try {
-      const eliminado = await this.usuarioService.eliminarUsuario(dni);
-      if (!eliminado) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
-      }
+      const eliminado = await this.eliminarUsuarioUseCase.execute(req.params.dni);
+      if (!eliminado) return res.status(404).json({ error: 'Usuario no encontrado' });
       res.json({ message: 'Usuario eliminado correctamente' });
     } catch (error) {
       console.error(error);
