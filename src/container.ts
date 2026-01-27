@@ -7,6 +7,12 @@ import { BuscarUsuarioPorDniUseCase } from './Aplicacion/use-cases/usuario/busca
 import { ActualizarUsuarioUseCase } from './Aplicacion/use-cases/usuario/actualizar-usuario.use-case';
 import { EliminarUsuarioUseCase } from './Aplicacion/use-cases/usuario/eliminar-usuario.use-case';
 
+// importación de casos de uso de ejercicio
+import { CrearEjercicioUseCase } from './Aplicacion/use-cases/ejercicio/crear-ejercicio.use-case';
+import { ListarEjerciciosUseCase } from './Aplicacion/use-cases/ejercicio/listar-ejercicios.use-case';
+import { ObtenerEjercicioPorIdUseCase } from './Aplicacion/use-cases/ejercicio/obtener-ejercicio-por-id.use-case';
+import { EliminarEjercicioUseCase } from './Aplicacion/use-cases/ejercicio/eliminar-ejercicio.use-case';
+
 // importación de repositorios
 import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
 import { UsuarioMockRepository } from './Infraestructura/repository/usuario.mock.repository';
@@ -17,8 +23,7 @@ import { PlanMockRepository } from './Infraestructura/repository/plan.mock.repos
 import { SesionMongoRepository } from './Infraestructura/repository/sesion.mongo.repository';
 import { SesionMockRepository } from './Infraestructura/repository/sesion.mock.repository';
 
-// importación de servicios (entidades no migradas a casos de uso)
-import { EjercicioService } from './Aplicacion/services/ejercicio.service';
+// importación de servicios (entidades pendientes de migrar)
 import { PlanService } from './Aplicacion/services/plan.service';
 import { SesionService } from './Aplicacion/services/sesion.service';
 
@@ -36,7 +41,6 @@ const appCache = new NodeCache({ stdTTL: 300 });
 // capa 1: infraestructura (repositorios)
 // =============================================================
 
-// selección de repositorio según el entorno (test o producción)
 const usuarioRepo = isTest ? new UsuarioMockRepository() : new UsuarioMongoRepository();
 const ejercicioRepo = isTest ? new EjercicioMockRepository() : new EjercicioMongoRepository();
 const planRepo = isTest ? new PlanMockRepository() : new PlanMongoRepository();
@@ -46,15 +50,20 @@ const sesionRepo = isTest ? new SesionMockRepository() : new SesionMongoReposito
 // capa 2: aplicación (casos de uso y servicios)
 // =============================================================
 
-// instanciación de casos de uso para usuario (inyección de repositorio y caché)
+// casos de uso usuario
 const crearUsuarioUseCase = new CrearUsuarioUseCase(usuarioRepo, appCache);
 const listarUsuariosUseCase = new ListarUsuariosUseCase(usuarioRepo, appCache);
 const buscarUsuarioPorDniUseCase = new BuscarUsuarioPorDniUseCase(usuarioRepo);
 const actualizarUsuarioUseCase = new ActualizarUsuarioUseCase(usuarioRepo, appCache);
 const eliminarUsuarioUseCase = new EliminarUsuarioUseCase(usuarioRepo, appCache);
 
-// instanciación de servicios para el resto de entidades
-const ejercicioService = new EjercicioService(ejercicioRepo);
+// casos de uso ejercicio
+const crearEjercicioUseCase = new CrearEjercicioUseCase(ejercicioRepo, appCache);
+const listarEjerciciosUseCase = new ListarEjerciciosUseCase(ejercicioRepo, appCache);
+const obtenerEjercicioPorIdUseCase = new ObtenerEjercicioPorIdUseCase(ejercicioRepo);
+const eliminarEjercicioUseCase = new EliminarEjercicioUseCase(ejercicioRepo, appCache);
+
+// servicios restantes
 const planService = new PlanService(planRepo);
 const sesionService = new SesionService(sesionRepo);
 
@@ -62,7 +71,6 @@ const sesionService = new SesionService(sesionRepo);
 // capa 3: infraestructura (controladores)
 // =============================================================
 
-// inyección de dependencias en los controladores
 const usuarioController = new UsuarioController(
   crearUsuarioUseCase,
   listarUsuariosUseCase,
@@ -71,7 +79,13 @@ const usuarioController = new UsuarioController(
   eliminarUsuarioUseCase,
 );
 
-const ejercicioController = new EjercicioController(ejercicioService);
+const ejercicioController = new EjercicioController(
+  crearEjercicioUseCase,
+  listarEjerciciosUseCase,
+  obtenerEjercicioPorIdUseCase,
+  eliminarEjercicioUseCase,
+);
+
 const planController = new PlanController(planService);
 const sesionController = new SesionController(sesionService);
 
