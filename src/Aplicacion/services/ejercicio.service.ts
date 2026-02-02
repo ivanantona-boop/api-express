@@ -22,7 +22,7 @@ export class EjercicioService {
     // configuración de caché con tiempo de vida de 10 minutos (600 segundos)
     this.cache = new NodeCache({ stdTTL: 600 });
 
-    // instanciación de los casos de uso inyectando el repositorio y la caché
+    // instancio los casos de uso inyectando el repositorio y la caché
     this.crearEjercicioUC = new CrearEjercicioUseCase(this.ejercicioRepository, this.cache);
     this.listarEjerciciosUC = new ListarEjerciciosUseCase(this.ejercicioRepository, this.cache);
     this.obtenerEjercicioPorIdUC = new ObtenerEjercicioPorIdUseCase(this.ejercicioRepository);
