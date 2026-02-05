@@ -4,6 +4,7 @@ import { usuarioController } from '../../container';
 const router = Router();
 
 // Rutas base: /api/usuarios
+router.post('/login', usuarioController.login);
 router.post('/', usuarioController.createUsuario);
 router.get('/', usuarioController.getUsuarios);
 router.get('/:dni', usuarioController.getUsuarioByDNI);
