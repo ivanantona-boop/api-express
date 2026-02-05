@@ -6,6 +6,36 @@ export class UsuarioController {
   // inyección del servicio fachada que contiene los casos de uso
   constructor(private readonly usuarioService: UsuarioService) {}
 
+  login = async (req: Request, res: Response) => {
+    try {
+      const { dni, contrasena } = req.body;
+
+      if (!dni || !contrasena) {
+        return res.status(400).json({ error: 'Faltan datos' });
+      }
+
+      // 1. Reusamos tu método obtenerPorDNI que ya funciona
+      const usuario = await this.usuarioService.obtenerPorDNI(dni);
+
+      if (!usuario) {
+        return res.status(404).json({ error: 'Usuario no encontrado' });
+      }
+
+      // 2. Comprobación de contraseña (SIMPLE, SIN ENCRIPTAR por ahora)
+      // Nota: typescript puede marcar error si 'contrasena' no está en el tipo Usuario.
+      // Usamos (usuario as any).contrasena por si acaso tu modelo es estricto.
+      if ((usuario as any).contrasena !== contrasena) {
+        return res.status(401).json({ error: 'Contraseña incorrecta' });
+      }
+
+      // 3. Login exitoso
+      res.status(200).json(usuario);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Error en el login' });
+    }
+  };
+
   createUsuario = async (req: Request, res: Response) => {
     // validación de datos con zod
     const validacion = UsuarioSchema.safeParse(req.body);

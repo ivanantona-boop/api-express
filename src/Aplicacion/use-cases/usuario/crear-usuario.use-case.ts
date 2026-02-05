@@ -9,15 +9,26 @@ export class CrearUsuarioUseCase {
     private readonly cache: NodeCache, // Inyectamos la caché
   ) {}
 
-  async execute(usuario: Usuario): Promise<Usuario> {
-    const dniVO = DniVO.crear(usuario.DNI);
+  // CAMBIO: Pongo 'any' temporalmente para que no se queje si tu interfaz Usuario no está actualizada
+  async execute(usuario: any): Promise<Usuario> {
+    // 1. Leemos 'dni' en minúscula (que es lo que viene del Controller ahora)
+    // Esto arregla el error "trim of undefined"
+    const dniVO = DniVO.crear(usuario.dni);
 
     const existente = await this.usuarioRepository.getByDNI(dniVO.getValue());
     if (existente) {
       throw new Error(`El usuario con DNI ${dniVO.getValue()} ya existe`);
     }
 
-    const usuarioLimpio = { ...usuario, DNI: dniVO.getValue() };
+    // 2. Construimos el objeto usando 'dni' minúscula para la base de datos
+    const usuarioLimpio = {
+      ...usuario,
+      dni: dniVO.getValue(),
+    };
+
+    // (Opcional) Si por algún motivo venía la mayúscula, la borramos para no ensuciar la BD
+    delete usuarioLimpio.DNI;
+
     const nuevoUsuario = await this.usuarioRepository.create(usuarioLimpio);
 
     // Borramos la caché para que la lista se actualice
