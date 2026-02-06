@@ -1,37 +1,40 @@
 import { Usuario } from '../../../Dominio/models/usuario.model';
 import { UsuarioRepository } from '../../../Dominio/interfaces/usuario/usuario.repository.interface';
-import { DniVO } from '../../../Dominio/value-objects/Dni.vo';
 import NodeCache from 'node-cache';
 
 export class CrearUsuarioUseCase {
   constructor(
     private readonly usuarioRepository: UsuarioRepository,
-    private readonly cache: NodeCache, // Inyectamos la caché
+    private readonly cache: NodeCache,
   ) {}
 
-  // CAMBIO: Pongo 'any' temporalmente para que no se queje si tu interfaz Usuario no está actualizada
-  async execute(usuario: any): Promise<Usuario> {
-    // 1. Leemos 'dni' en minúscula (que es lo que viene del Controller ahora)
-    // Esto arregla el error "trim of undefined"
-    const dniVO = DniVO.crear(usuario.dni);
+  async execute(usuario: Usuario): Promise<Usuario> {
+    // 1. normalización del dato
+    // al no tener value object, hacemos un trim() básico para evitar espacios accidentales
+    // asumimos que 'usuario.nickname' es un string
+    const nicknameProcesado = usuario.nickname.trim();
 
-    const existente = await this.usuarioRepository.getByDNI(dniVO.getValue());
+    // 2. verificación de existencia
+    // llamamos al repositorio pasando el string directamente
+    const existente = await this.usuarioRepository.getByNickname(nicknameProcesado);
+
     if (existente) {
-      throw new Error(`El usuario con DNI ${dniVO.getValue()} ya existe`);
+      throw new Error(`el usuario con nickname ${nicknameProcesado} ya existe`);
     }
 
-    // 2. Construimos el objeto usando 'dni' minúscula para la base de datos
-    const usuarioLimpio = {
+    // 3. preparación del objeto
+    // creamos una copia del usuario asegurando que el nickname va limpio
+    // ya no hace falta borrar dni ni transformar value objects
+    const usuarioParaGuardar = {
       ...usuario,
-      dni: dniVO.getValue(),
+      nickname: nicknameProcesado,
     };
 
-    // (Opcional) Si por algún motivo venía la mayúscula, la borramos para no ensuciar la BD
-    delete usuarioLimpio.DNI;
+    // 4. persistencia
+    const nuevoUsuario = await this.usuarioRepository.create(usuarioParaGuardar);
 
-    const nuevoUsuario = await this.usuarioRepository.create(usuarioLimpio);
-
-    // Borramos la caché para que la lista se actualice
+    // 5. gestión de caché
+    // borramos la caché global de usuarios para que aparezca el nuevo registro
     this.cache.del('users_all');
 
     return nuevoUsuario;

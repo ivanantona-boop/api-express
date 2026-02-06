@@ -34,7 +34,7 @@ app.use('/api/sesiones', sesionRouter);
 
 // Ruta base
 app.get('/', (req, res) => {
-  res.send('API Hexagonal Funcionando 🚀. Ve a /api-docs para ver la documentación.');
+  res.send('API Hexagonal Funcionando. Ve a /api-docs para ver la documentación.');
 });
 
 // Ruta de Salud (Útil para saber en qué entorno estás)

@@ -1,14 +1,13 @@
-// Definimos los roles posibles para evitar errores de escritura
-export type RolUsuario = 'USUARIO' | 'ENTRENADOR';
-
 export interface Usuario {
-  id?: string; // Opcional: Mongo lo genera, pero el dominio lo necesita para identificar
+  id?: string; // el id es opcional al crear, pero obligatorio al leer
   nombre: string;
   apellidos: string;
-  contraseña: string;
-  DNI: string; // Tu identificador de negocio único
-  rol: RolUsuario;
-  id_entrenador?: string;
+  contrasena: string;
+  nickname: string; // ya cambiado a nickname
+
+  // nuevos campos requeridos
+  rol: 'USUARIO' | 'ENTRENADOR'; // tipado estricto para el rol
+  id_entrenador?: string; // opcional (el signo ?) porque un entrenador no tiene entrenador
 }
 
 //¿Qué es? Es la Definición Pura (El plano).

@@ -1,36 +1,45 @@
 import { Schema, model } from 'mongoose';
 import { Usuario } from '../../Dominio/models/usuario.model';
 
-const UsuarioSchema = new Schema<Usuario>(
+// definimos el esquema. no pasamos <Usuario> al constructor new Schema()
+// para evitar conflictos de tipos entre string y objectid,
+// pero sí lo usamos en model<Usuario> al final.
+const UsuarioSchema = new Schema(
   {
-    nombre: { type: String, required: true },
-    apellidos: { type: String, required: true },
-    contrasena: { type: String, required: true }, // Perfecto, ya está sin Ñ
-
-    // CORRECCIÓN AQUÍ: Cambiamos 'DNI' por 'dni' (minúscula)
-    dni: { type: String, required: true, unique: true },
-
-    // --- NUEVOS CAMPOS NECESARIOS PARA TUS REQUISITOS ---
-
-    // 1. ROL: Para saber si es Cliente o Entrenador
+    nombre: {
+      type: String,
+      required: true,
+    },
+    apellidos: {
+      type: String,
+      required: true,
+    },
+    contrasena: {
+      type: String,
+      required: true,
+    },
+    nickname: {
+      type: String,
+      required: true,
+      unique: true, // crea un índice único automáticamente
+    },
     rol: {
       type: String,
-      enum: ['USUARIO', 'ENTRENADOR'],
+      enum: ['USUARIO', 'ENTRENADOR'], // validación de valores permitidos
       default: 'USUARIO',
       required: true,
     },
-
-    // 2. ENTRENADOR: Relación (Foreign Key en SQL)
     id_entrenador: {
-      type: Schema.Types.ObjectId,
-      ref: 'Usuario',
-      required: false,
+      type: Schema.Types.ObjectId, // en base de datos es un objeto id
+      ref: 'Usuario', // permite hacer 'populate' para traer los datos del entrenador
+      required: false, // no es obligatorio (los entrenadores no tienen entrenador)
     },
   },
   {
-    timestamps: true,
-    versionKey: false,
+    timestamps: true, // crea automáticamente createdAt y updatedAt
+    versionKey: false, // elimina el campo __v interno de mongo
   },
 );
 
+// aquí sí vinculamos la interfaz usuario para que el resto de la app tenga autocompletado
 export const UsuarioModel = model<Usuario>('Usuario', UsuarioSchema);

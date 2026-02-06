@@ -18,16 +18,16 @@ const seed = async () => {
     const entrenador = await UsuarioModel.create({
       nombre: 'Ana',
       apellidos: 'García',
-      contraseña: '1234',
-      DNI: '22222222B',
+      contrasena: '1234',
+      nickname: 'ana_garcia',
       rol: 'ENTRENADOR',
     });
 
     const usuario = await UsuarioModel.create({
       nombre: 'Juan',
       apellidos: 'Pérez',
-      contraseña: 'abcd',
-      DNI: '11111111A',
+      contrasena: 'abcd',
+      nickname: 'juan_perez',
       rol: 'USUARIO',
       id_entrenador: entrenador._id.toString(), //  usuario._id es ObjectId y id_usuario espera string, por eso se pone .toString().
     });

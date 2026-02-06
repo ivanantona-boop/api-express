@@ -1,49 +1,59 @@
 import { UsuarioRepository } from '../../Dominio/interfaces/usuario/usuario.repository.interface';
 import { Usuario } from '../../Dominio/models/usuario.model';
-import { UsuarioModel } from '../models/UsuarioModel';
+import { UsuarioModel } from '../models/UsuarioModel'; // asegúrate de que el nombre del archivo coincida
 
 export class UsuarioMongoRepository implements UsuarioRepository {
+  // guardar un nuevo usuario en la base de datos
   async create(usuario: Usuario): Promise<Usuario> {
     const nuevo = await UsuarioModel.create(usuario);
     return this.mapToDomain(nuevo);
   }
 
+  // obtener todos los usuarios
   async getAll(): Promise<Usuario[]> {
     const docs = await UsuarioModel.find().lean();
     return docs.map((d) => this.mapToDomain(d));
   }
 
-  async getByDNI(dni: string): Promise<Usuario | null> {
-    const doc = await UsuarioModel.findOne({ DNI: dni }).lean();
+  // cambio principal: buscar por nickname en lugar de dni
+  async getByNickname(nickname: string): Promise<Usuario | null> {
+    // la consulta de mongoose cambia: { nickname: nickname }
+    const doc = await UsuarioModel.findOne({ nickname: nickname }).lean();
+
     if (!doc) return null;
     return this.mapToDomain(doc);
   }
 
-  async update(dni: string, data: Partial<Usuario>): Promise<Usuario | null> {
-    const doc = await UsuarioModel.findOneAndUpdate({ DNI: dni }, data, { new: true }).lean();
+  // cambio principal: buscar por nickname para actualizar
+  async update(nickname: string, data: Partial<Usuario>): Promise<Usuario | null> {
+    // buscamos por nickname y devolvemos el documento nuevo (new: true)
+    const doc = await UsuarioModel.findOneAndUpdate({ nickname: nickname }, data, {
+      new: true,
+    }).lean();
+
     if (!doc) return null;
     return this.mapToDomain(doc);
   }
 
-  async delete(dni: string): Promise<boolean> {
-    const result = await UsuarioModel.findOneAndDelete({ DNI: dni });
+  // cambio principal: buscar por nickname para eliminar
+  async delete(nickname: string): Promise<boolean> {
+    const result = await UsuarioModel.findOneAndDelete({ nickname: nickname });
+    // convertimos el resultado a booleano (true si existía y se borró, false si no)
     return !!result;
   }
 
-  // Helper privado para limpiar los datos de Mongo (_id) a tu Dominio (id)
+  // helper privado para limpiar los datos de mongo y convertirlos al modelo de dominio
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private mapToDomain(mongoDoc: any): Usuario {
     return {
-      id: mongoDoc._id.toString(),
+      id: mongoDoc._id.toString(), // conversión de objectid a string
       nombre: mongoDoc.nombre,
       apellidos: mongoDoc.apellidos,
-      contraseña: mongoDoc.contraseña,
-      DNI: mongoDoc.DNI,
+      contrasena: mongoDoc.contrasena,
+      nickname: mongoDoc.nickname,
 
-      // Rol es obligatorio en tu interfaz Usuario
+      // mapeo de los nuevos campos obligatorios y opcionales
       rol: mongoDoc.rol,
-
-      //  id_entrenador es opcional, lo convertimos a string si existe
       id_entrenador: mongoDoc.id_entrenador ? mongoDoc.id_entrenador.toString() : undefined,
     };
   }

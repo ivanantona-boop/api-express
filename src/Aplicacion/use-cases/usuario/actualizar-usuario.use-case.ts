@@ -1,6 +1,5 @@
 import { Usuario } from '../../../Dominio/models/usuario.model';
 import { UsuarioRepository } from '../../../Dominio/interfaces/usuario/usuario.repository.interface';
-import { DniVO } from '../../../Dominio/value-objects/Dni.vo';
 import NodeCache from 'node-cache';
 
 export class ActualizarUsuarioUseCase {
@@ -9,19 +8,26 @@ export class ActualizarUsuarioUseCase {
     private readonly cache: NodeCache,
   ) {}
 
-  async execute(dni: string, datos: Partial<Usuario>): Promise<Usuario | null> {
-    const dniBusqueda = DniVO.crear(dni).getValue();
+  async execute(nicknameOriginal: string, datos: Partial<Usuario>): Promise<Usuario | null> {
+    // limpieza del nickname de búsqueda para asegurar que no haya espacios accidentales
+    const nicknameBusqueda = nicknameOriginal.trim();
+
+    // creación de una copia de los datos para manipularlos sin afectar al objeto original
     const datosLimpios = { ...datos };
 
-    if (datos.DNI) {
-      const dniVO = DniVO.crear(datos.DNI);
-      datosLimpios.DNI = dniVO.getValue();
+    // si en los datos a actualizar viene un nuevo nickname, también lo limpiamos
+    // esto asegura que si el usuario cambia su nombre, se guarde sin espacios extra
+    if (datos.nickname) {
+      datosLimpios.nickname = datos.nickname.trim();
     }
 
-    const usuarioActualizado = await this.usuarioRepository.update(dniBusqueda, datosLimpios);
+    // llamada al repositorio pasando el nickname actual como identificador
+    const usuarioActualizado = await this.usuarioRepository.update(nicknameBusqueda, datosLimpios);
 
+    // si la actualización fue exitosa, invalidamos la caché de lista de usuarios
+    // esto obliga a que la próxima vez que alguien pida "todos los usuarios", se lean los datos nuevos de la base de datos
     if (usuarioActualizado) {
-      this.cache.del('users_all'); // Invalidar caché
+      this.cache.del('users_all');
     }
 
     return usuarioActualizado;

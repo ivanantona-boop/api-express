@@ -10,9 +10,9 @@ export class UsuarioMockRepository implements UsuarioRepository {
     return [...this.usuarios];
   }
 
-  // CAMBIO CLAVE: Buscamos por DNI (string), no por ID (number)
-  async getByDNI(dni: string): Promise<Usuario | null> {
-    return this.usuarios.find((u) => u.DNI === dni) || null;
+  // CAMBIO CLAVE: Buscamos por nickname (string), no por ID (number)
+  async getByNickname(nickname: string): Promise<Usuario | null> {
+    return this.usuarios.find((u) => u.nickname === nickname) || null;
   }
 
   async create(usuario: Usuario): Promise<Usuario> {
@@ -26,9 +26,9 @@ export class UsuarioMockRepository implements UsuarioRepository {
     return nuevoUsuario;
   }
 
-  // CAMBIO CLAVE: Actualizamos buscando por DNI y aceptamos datos parciales (Partial<Usuario>)
-  async update(dni: string, datosActualizados: Partial<Usuario>): Promise<Usuario | null> {
-    const index = this.usuarios.findIndex((u) => u.DNI === dni);
+  // CAMBIO CLAVE: Actualizamos buscando por nickname y aceptamos datos parciales (Partial<Usuario>)
+  async update(nickname: string, datosActualizados: Partial<Usuario>): Promise<Usuario | null> {
+    const index = this.usuarios.findIndex((u) => u.nickname === nickname);
 
     if (index === -1) return null;
 
@@ -42,9 +42,9 @@ export class UsuarioMockRepository implements UsuarioRepository {
     return usuarioActualizado;
   }
 
-  // CAMBIO CLAVE: Borramos usando el DNI
-  async delete(dni: string): Promise<boolean> {
-    const indice = this.usuarios.findIndex((u) => u.DNI === dni);
+  // CAMBIO CLAVE: Borramos usando el nickname
+  async delete(nickname: string): Promise<boolean> {
+    const indice = this.usuarios.findIndex((u) => u.nickname === nickname);
 
     if (indice === -1) {
       return false; // No se encontró

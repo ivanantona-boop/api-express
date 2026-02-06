@@ -7,8 +7,8 @@ const router = Router();
 router.post('/login', usuarioController.login);
 router.post('/', usuarioController.createUsuario);
 router.get('/', usuarioController.getUsuarios);
-router.get('/:dni', usuarioController.getUsuarioByDNI);
-router.put('/:dni', usuarioController.updateUsuario);
-router.delete('/:dni', usuarioController.deleteUsuario);
+router.get('/:nickname', usuarioController.getUsuarioByNickname);
+router.put('/:nickname', usuarioController.updateUsuario);
+router.delete('/:nickname', usuarioController.deleteUsuario);
 
 export { router as usuarioRouter };

@@ -1,75 +1,91 @@
 import { Request, Response } from 'express';
+import { ZodError } from 'zod';
 import { UsuarioSchema } from '../schemas/usuario.schema';
 import { UsuarioService } from '../../Aplicacion/services/usuario.service';
 
 export class UsuarioController {
-  // inyección del servicio fachada que contiene los casos de uso
+  // inyección del servicio fachada que gestiona los casos de uso
   constructor(private readonly usuarioService: UsuarioService) {}
 
   login = async (req: Request, res: Response) => {
     try {
-      const { dni, contrasena } = req.body;
+      const { nickname, contrasena } = req.body;
 
-      if (!dni || !contrasena) {
-        return res.status(400).json({ error: 'Faltan datos' });
+      // validación básica de presencia de campos
+      if (!nickname || !contrasena) {
+        return res.status(400).json({ error: 'faltan datos de acceso' });
       }
 
-      // 1. Reusamos tu método obtenerPorDNI que ya funciona
-      const usuario = await this.usuarioService.obtenerPorDNI(dni);
+      // recuperación del usuario utilizando el servicio de búsqueda por nickname
+      const usuario = await this.usuarioService.obtenerPorNickname(nickname);
 
       if (!usuario) {
-        return res.status(404).json({ error: 'Usuario no encontrado' });
+        return res.status(404).json({ error: 'usuario no encontrado' });
       }
 
-      // 2. Comprobación de contraseña (SIMPLE, SIN ENCRIPTAR por ahora)
-      // Nota: typescript puede marcar error si 'contrasena' no está en el tipo Usuario.
-      // Usamos (usuario as any).contrasena por si acaso tu modelo es estricto.
+      // verificación de contraseña
+      // forzamos el tipado a any temporalmente para acceder a la contraseña si el modelo es estricto
       if ((usuario as any).contrasena !== contrasena) {
-        return res.status(401).json({ error: 'Contraseña incorrecta' });
+        return res.status(401).json({ error: 'contraseña incorrecta' });
       }
 
-      // 3. Login exitoso
+      // respuesta exitosa devolviendo los datos del usuario
       res.status(200).json(usuario);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'Error en el login' });
+      res.status(500).json({ error: 'error durante el proceso de login' });
     }
   };
 
   createUsuario = async (req: Request, res: Response) => {
-    // validación de datos con zod
-    const validacion = UsuarioSchema.safeParse(req.body);
-    if (!validacion.success) return res.status(400).json({ error: validacion.error.issues });
-
     try {
-      // llamada al servicio para registrar el usuario
-      const nuevo = await this.usuarioService.registrarUsuario(validacion.data);
+      // validación estricta con parse. si los datos son inválidos, lanza una excepción zoderror inmediatamente
+      const datos = UsuarioSchema.parse(req.body);
+
+      // llamada al servicio para registrar el nuevo usuario
+      // usamos 'as any' para adaptar el tipo inferido de zod al modelo de dominio esperado por el servicio
+      const nuevo = await this.usuarioService.registrarUsuario(datos as any);
+
       res.status(201).json(nuevo);
     } catch (error: any) {
       console.error(error);
-      // manejo específico de error de duplicidad
-      if (error.message.includes('existe')) return res.status(409).json({ error: error.message });
-      res.status(500).json({ error: 'error interno' });
+
+      // manejo de errores de validación de datos (zod)
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.issues });
+      }
+
+      // manejo específico para errores de duplicidad (nickname ya registrado)
+      if (error.message && error.message.includes('existe')) {
+        return res.status(409).json({ error: error.message });
+      }
+
+      res.status(500).json({ error: 'error interno al crear usuario' });
     }
   };
 
   getUsuarios = async (req: Request, res: Response) => {
     try {
-      // llamada al servicio para obtener todos los usuarios
+      // llamada al servicio para recuperar el listado completo
       const usuarios = await this.usuarioService.obtenerTodos();
       res.json(usuarios);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'error al obtener usuarios' });
+      res.status(500).json({ error: 'error al obtener el listado de usuarios' });
     }
   };
 
-  getUsuarioByDNI = async (req: Request, res: Response) => {
+  getUsuarioByNickname = async (req: Request, res: Response) => {
     try {
-      // llamada al servicio para buscar por dni
-      const usuario = await this.usuarioService.obtenerPorDNI(req.params.dni);
+      // extracción del nickname desde los parámetros de la url
+      const { nickname } = req.params;
 
-      if (!usuario) return res.status(404).json({ error: 'usuario no encontrado' });
+      // búsqueda del usuario específico
+      const usuario = await this.usuarioService.obtenerPorNickname(nickname);
+
+      if (!usuario) {
+        return res.status(404).json({ error: 'usuario no encontrado' });
+      }
       res.json(usuario);
     } catch (error) {
       console.error(error);
@@ -79,34 +95,44 @@ export class UsuarioController {
 
   updateUsuario = async (req: Request, res: Response) => {
     try {
-      // validación parcial de los datos a actualizar
-      const validacion = UsuarioSchema.partial().safeParse(req.body);
-      if (!validacion.success) return res.status(400).json({ error: validacion.error.issues });
+      // validación parcial permitiendo enviar solo los campos que se desean modificar
+      const datos = UsuarioSchema.partial().parse(req.body);
 
-      // llamada al servicio para actualizar
+      // llamada al servicio de actualización usando el nickname como identificador
+      // usamos 'as any' para compatibilidad de tipos entre zod y el modelo de dominio
       const actualizado = await this.usuarioService.actualizarUsuario(
-        req.params.dni,
-        validacion.data,
+        req.params.nickname,
+        datos as any,
       );
 
-      if (!actualizado) return res.status(404).json({ error: 'usuario no encontrado' });
+      if (!actualizado) {
+        return res.status(404).json({ error: 'usuario no encontrado para actualizar' });
+      }
       res.json(actualizado);
-    } catch (error) {
+    } catch (error: any) {
       console.error(error);
-      res.status(500).json({ error: 'error al actualizar' });
+
+      // manejo de errores de validación de datos
+      if (error instanceof ZodError) {
+        return res.status(400).json({ error: error.issues });
+      }
+
+      res.status(500).json({ error: 'error al actualizar usuario' });
     }
   };
 
   deleteUsuario = async (req: Request, res: Response) => {
     try {
-      // llamada al servicio para eliminar
-      const eliminado = await this.usuarioService.eliminarUsuario(req.params.dni);
+      // llamada al servicio para eliminar el registro usando el nickname de la url
+      const eliminado = await this.usuarioService.eliminarUsuario(req.params.nickname);
 
-      if (!eliminado) return res.status(404).json({ error: 'usuario no encontrado' });
+      if (!eliminado) {
+        return res.status(404).json({ error: 'usuario no encontrado para eliminar' });
+      }
       res.json({ message: 'usuario eliminado correctamente' });
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'error al eliminar' });
+      res.status(500).json({ error: 'error al eliminar usuario' });
     }
   };
 }
