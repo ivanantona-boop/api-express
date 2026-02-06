@@ -1,72 +1,73 @@
 import { Request, Response } from 'express';
 import { ZodError } from 'zod';
 import { UsuarioSchema } from '../schemas/usuario.schema';
+
+// 1. Imports de Servicios y Casos de Uso
 import { UsuarioService } from '../../Aplicacion/services/usuario.service';
+import { ListarClientesUseCase } from '../../Aplicacion/use-cases/usuario/listar-clientes.use-case'; // Asegúrate que la ruta acaba en .usecase
+import { LoginUsuarioUseCase } from '../../Aplicacion/use-cases/usuario/login-usuario.use-case'; // Importa este también
 
 export class UsuarioController {
-  // inyección del servicio fachada que gestiona los casos de uso
-  constructor(private readonly usuarioService: UsuarioService) {}
+  // 2. INYECCIÓN DE DEPENDENCIAS
+  // Aquí es donde "recibes" las herramientas que vas a usar
+  constructor(
+    private readonly usuarioService: UsuarioService, // Para crear, borrar, etc. (Legacy)
+    private readonly loginUseCase: LoginUsuarioUseCase, // Para el login nuevo
+    private readonly listarClientesUseCase: ListarClientesUseCase, // Para que el entrenador vea alumnos
+  ) {}
 
+  // --- MÉTODO REFACTORIZADO (LOGIN) ---
   login = async (req: Request, res: Response) => {
     try {
       const { nickname, contrasena } = req.body;
 
-      // validación básica de presencia de campos
       if (!nickname || !contrasena) {
         return res.status(400).json({ error: 'faltan datos de acceso' });
       }
 
-      // recuperación del usuario utilizando el servicio de búsqueda por nickname
-      const usuario = await this.usuarioService.obtenerPorNickname(nickname);
+      // CAMBIO: Usamos el Caso de Uso en vez del Servicio
+      // Esto delega la lógica de verificar contraseña al caso de uso
+      const usuario = await this.loginUseCase.execute(nickname, contrasena);
 
-      if (!usuario) {
-        return res.status(404).json({ error: 'usuario no encontrado' });
-      }
-
-      // verificación de contraseña
-      // forzamos el tipado a any temporalmente para acceder a la contraseña si el modelo es estricto
-      if ((usuario as any).contrasena !== contrasena) {
-        return res.status(401).json({ error: 'contraseña incorrecta' });
-      }
-
-      // respuesta exitosa devolviendo los datos del usuario
       res.status(200).json(usuario);
-    } catch (error) {
+    } catch (error: any) {
+      // Manejo de errores simplificado
       console.error(error);
-      res.status(500).json({ error: 'error durante el proceso de login' });
+      const status = error.message === 'Usuario no encontrado' ? 404 : 401;
+      res.status(status).json({ error: error.message });
     }
   };
 
+  // --- NUEVO MÉTODO (LISTAR CLIENTES) ---
+  getClientes = async (req: Request, res: Response) => {
+    try {
+      // Este método es el que llamará el Entrenador
+      const clientes = await this.listarClientesUseCase.execute();
+      res.status(200).json(clientes);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'error al obtener clientes' });
+    }
+  };
+
+  // --- MÉTODOS EXISTENTES (Siguen usando usuarioService por ahora) ---
+
   createUsuario = async (req: Request, res: Response) => {
     try {
-      // validación estricta con parse. si los datos son inválidos, lanza una excepción zoderror inmediatamente
       const datos = UsuarioSchema.parse(req.body);
-
-      // llamada al servicio para registrar el nuevo usuario
-      // usamos 'as any' para adaptar el tipo inferido de zod al modelo de dominio esperado por el servicio
       const nuevo = await this.usuarioService.registrarUsuario(datos as any);
-
       res.status(201).json(nuevo);
     } catch (error: any) {
       console.error(error);
-
-      // manejo de errores de validación de datos (zod)
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.issues });
-      }
-
-      // manejo específico para errores de duplicidad (nickname ya registrado)
-      if (error.message && error.message.includes('existe')) {
+      if (error instanceof ZodError) return res.status(400).json({ error: error.issues });
+      if (error.message && error.message.includes('existe'))
         return res.status(409).json({ error: error.message });
-      }
-
       res.status(500).json({ error: 'error interno al crear usuario' });
     }
   };
 
   getUsuarios = async (req: Request, res: Response) => {
     try {
-      // llamada al servicio para recuperar el listado completo
       const usuarios = await this.usuarioService.obtenerTodos();
       res.json(usuarios);
     } catch (error) {
@@ -77,15 +78,9 @@ export class UsuarioController {
 
   getUsuarioByNickname = async (req: Request, res: Response) => {
     try {
-      // extracción del nickname desde los parámetros de la url
       const { nickname } = req.params;
-
-      // búsqueda del usuario específico
       const usuario = await this.usuarioService.obtenerPorNickname(nickname);
-
-      if (!usuario) {
-        return res.status(404).json({ error: 'usuario no encontrado' });
-      }
+      if (!usuario) return res.status(404).json({ error: 'usuario no encontrado' });
       res.json(usuario);
     } catch (error) {
       console.error(error);
@@ -95,40 +90,25 @@ export class UsuarioController {
 
   updateUsuario = async (req: Request, res: Response) => {
     try {
-      // validación parcial permitiendo enviar solo los campos que se desean modificar
       const datos = UsuarioSchema.partial().parse(req.body);
-
-      // llamada al servicio de actualización usando el nickname como identificador
-      // usamos 'as any' para compatibilidad de tipos entre zod y el modelo de dominio
       const actualizado = await this.usuarioService.actualizarUsuario(
         req.params.nickname,
         datos as any,
       );
-
-      if (!actualizado) {
+      if (!actualizado)
         return res.status(404).json({ error: 'usuario no encontrado para actualizar' });
-      }
       res.json(actualizado);
     } catch (error: any) {
       console.error(error);
-
-      // manejo de errores de validación de datos
-      if (error instanceof ZodError) {
-        return res.status(400).json({ error: error.issues });
-      }
-
+      if (error instanceof ZodError) return res.status(400).json({ error: error.issues });
       res.status(500).json({ error: 'error al actualizar usuario' });
     }
   };
 
   deleteUsuario = async (req: Request, res: Response) => {
     try {
-      // llamada al servicio para eliminar el registro usando el nickname de la url
       const eliminado = await this.usuarioService.eliminarUsuario(req.params.nickname);
-
-      if (!eliminado) {
-        return res.status(404).json({ error: 'usuario no encontrado para eliminar' });
-      }
+      if (!eliminado) return res.status(404).json({ error: 'usuario no encontrado para eliminar' });
       res.json({ message: 'usuario eliminado correctamente' });
     } catch (error) {
       console.error(error);

@@ -10,29 +10,35 @@ export class UsuarioMockRepository implements UsuarioRepository {
     return [...this.usuarios];
   }
 
-  // CAMBIO CLAVE: Buscamos por nickname (string), no por ID (number)
+  // --- NUEVO MÉTODO AÑADIDO ---
+  // Necesario para que el entrenador filtre a sus alumnos en los tests
+  async getByRol(rol: 'USUARIO' | 'ENTRENADOR'): Promise<Usuario[]> {
+    return this.usuarios.filter((u) => u.rol === rol);
+  }
+
+  // Buscamos por nickname (string)
   async getByNickname(nickname: string): Promise<Usuario | null> {
     return this.usuarios.find((u) => u.nickname === nickname) || null;
   }
 
   async create(usuario: Usuario): Promise<Usuario> {
-    // Simulamos que MongoDB genera un _id automático (un string aleatorio)
+    // Simulamos que MongoDB genera un _id automático
     const nuevoUsuario = {
       ...usuario,
-      id: Math.random().toString(36).substring(2, 15), // Genera un string tipo "a3f12..."
+      id: Math.random().toString(36).substring(2, 15),
     };
 
     this.usuarios.push(nuevoUsuario);
     return nuevoUsuario;
   }
 
-  // CAMBIO CLAVE: Actualizamos buscando por nickname y aceptamos datos parciales (Partial<Usuario>)
+  // Actualizamos buscando por nickname
   async update(nickname: string, datosActualizados: Partial<Usuario>): Promise<Usuario | null> {
     const index = this.usuarios.findIndex((u) => u.nickname === nickname);
 
     if (index === -1) return null;
 
-    // Mezclamos los datos viejos con los nuevos (Merge)
+    // Mezclamos los datos viejos con los nuevos
     const usuarioActualizado = {
       ...this.usuarios[index],
       ...datosActualizados,
@@ -42,15 +48,14 @@ export class UsuarioMockRepository implements UsuarioRepository {
     return usuarioActualizado;
   }
 
-  // CAMBIO CLAVE: Borramos usando el nickname
+  // Borramos usando el nickname
   async delete(nickname: string): Promise<boolean> {
     const indice = this.usuarios.findIndex((u) => u.nickname === nickname);
 
     if (indice === -1) {
-      return false; // No se encontró
+      return false;
     }
 
-    // Eliminamos el elemento del array
     this.usuarios.splice(indice, 1);
     return true;
   }
