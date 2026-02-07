@@ -28,10 +28,11 @@ export class CrearUsuarioUseCase {
     const usuarioParaGuardar = {
       ...usuario,
       nickname: nicknameProcesado,
+      rol: 'USUARIO',
     };
 
     // 4. persistencia
-    const nuevoUsuario = await this.usuarioRepository.create(usuarioParaGuardar);
+    const nuevoUsuario = await this.usuarioRepository.create(usuarioParaGuardar as any);
 
     // 5. gestión de caché
     // borramos la caché global de usuarios para que aparezca el nuevo registro
