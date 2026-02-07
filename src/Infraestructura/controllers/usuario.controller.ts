@@ -58,10 +58,10 @@ export class UsuarioController {
       const nuevo = await this.usuarioService.registrarUsuario(datos as any);
       res.status(201).json(nuevo);
     } catch (error: any) {
-      console.error(error);
       if (error instanceof ZodError) return res.status(400).json({ error: error.issues });
       if (error.message && error.message.includes('existe'))
         return res.status(409).json({ error: error.message });
+      console.error(error);
       res.status(500).json({ error: 'error interno al crear usuario' });
     }
   };
@@ -99,8 +99,8 @@ export class UsuarioController {
         return res.status(404).json({ error: 'usuario no encontrado para actualizar' });
       res.json(actualizado);
     } catch (error: any) {
-      console.error(error);
       if (error instanceof ZodError) return res.status(400).json({ error: error.issues });
+      console.error(error);
       res.status(500).json({ error: 'error al actualizar usuario' });
     }
   };

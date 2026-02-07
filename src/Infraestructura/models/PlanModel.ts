@@ -4,6 +4,7 @@ import { PlanEntrenamiento } from '../../Dominio/models/plan.model';
 const PlanSchema = new Schema<PlanEntrenamiento>(
   {
     objetivo_principal: { type: String, required: true },
+    objetivo_secundario: { type: String },
     // Mantenemos el 'as any' que pusimos antes
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     id_usuario: { type: Schema.Types.ObjectId as any, ref: 'Usuario', required: true },

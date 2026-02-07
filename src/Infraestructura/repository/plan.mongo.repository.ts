@@ -45,6 +45,7 @@ export class PlanMongoRepository implements PlanRepository {
 
       // 2. Campos de datos exactos de tu Schema
       objetivo_principal: mongoDoc.objetivo_principal,
+      objetivo_secundario: mongoDoc.objetivo_secundario,
       fecha_inicio: mongoDoc.fecha_inicio,
 
       // 3. ID del usuario (convertido de ObjectId a String)
