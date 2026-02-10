@@ -1,10 +1,28 @@
 import { SesionEntrenamiento } from '../../models/sesion.model';
 
+// --- 1. NUEVO: Definimos el "paquete" de datos que llega desde la App Android ---
+export interface SesionInputDTO {
+  idUsuario: string; // String normal (no ObjectId todavía)
+  titulo: string;
+  fechaProgramada: Date;
+  ejercicios: {
+    nombreEjercicio: string; // Android manda el nombre, no el ID
+    series: number;
+    repeticiones: string | number; // Aceptamos string por si mandan rangos "10-12"
+    peso: number;
+    notas?: string;
+  }[];
+}
+
+// --- 2. MODIFICADO: Añadimos el nuevo método al contrato ---
 export interface SesionRepository {
+  // Tus métodos antiguos (los mantenemos, son útiles)
   create(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento>;
   getById(id: string): Promise<SesionEntrenamiento | null>;
-  // Buscar sesiones por Plan (ej: Todas las del mes)
   getByPlanId(idPlan: string): Promise<SesionEntrenamiento[]>;
   update(id: string, sesion: Partial<SesionEntrenamiento>): Promise<SesionEntrenamiento | null>;
   delete(id: string): Promise<boolean>;
+
+  // encargado de traducir DTO -> Modelo
+  crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento>;
 }

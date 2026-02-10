@@ -32,10 +32,28 @@ export class SesionService {
     this.eliminarSesionUC = new EliminarSesionUseCase(this.sesionRepository, this.cache);
   }
 
-  // método fachada para crear sesión
+  // método fachada para crear sesión (uso interno o admin)
   async crearSesion(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento> {
     return await this.crearSesionUC.execute(sesion);
   }
+
+  // --- NUEVO MÉTODO AÑADIDO ---
+  // Este es el método que soluciona el error en el Controller.
+  // Recibe los datos "crudos" de la App y se los pasa al método especial del Caso de Uso.
+  async crearDesdeApp(datos: {
+    idUsuario: string;
+    titulo: string;
+    fechaProgramada: string;
+    ejercicios: any[];
+  }): Promise<SesionEntrenamiento> {
+    return await this.crearSesionUC.executeDesdeApp(
+      datos.idUsuario,
+      datos.titulo,
+      datos.fechaProgramada,
+      datos.ejercicios,
+    );
+  }
+  // -----------------------------
 
   // método fachada para obtener sesión por id
   async obtenerPorId(id: string): Promise<SesionEntrenamiento | null> {

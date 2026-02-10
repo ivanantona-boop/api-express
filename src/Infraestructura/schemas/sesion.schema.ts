@@ -33,3 +33,32 @@ export const SesionSchema = z.object({
   // Validación del array
   ejercicios: z.array(DetalleSesionSchema).optional().default([]),
 });
+
+/**
+ * Esquema DTO (Data Transfer Object) para la creación desde la App Android.
+ * Es más permisivo porque:
+ * 1. No exige ID de ejercicio (viene el nombre).
+ * 2. No exige ID de plan (el repositorio pone uno dummy).
+ * 3. Permite rangos en repeticiones ("10-12").
+ */
+export const SesionAppSchema = z.object({
+  idUsuario: z.string().min(1, 'El ID de usuario es obligatorio'),
+  titulo: z.string().min(1, 'El título es obligatorio'),
+  // Android envía la fecha como String "YYYY-MM-DD", no como objeto Date
+  fechaProgramada: z.string(),
+
+  ejercicios: z.array(
+    z.object({
+      nombreEjercicio: z.string().min(1, 'El nombre del ejercicio es obligatorio'),
+
+      // Usamos coerce.number() por seguridad, por si llega como string "4"
+      series: z.coerce.number().int().positive(),
+
+      // La clave: Aceptamos string O número para permitir rangos "10-12"
+      repeticiones: z.union([z.string(), z.number()]),
+
+      peso: z.coerce.number().nonnegative().optional().default(0),
+      notas: z.string().optional(),
+    }),
+  ),
+});
