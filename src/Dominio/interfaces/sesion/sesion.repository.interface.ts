@@ -12,6 +12,7 @@ export interface SesionInputDTO {
     repeticiones: string | number; // Aceptamos string por si mandan rangos "10-12"
     peso: number;
     notas?: string;
+    bloque?: number; // Nuevo campo para identificar agrupaciones de ejercicios
   }[];
 }
 

@@ -1,17 +1,36 @@
 import { Types } from 'mongoose';
 import {
   SesionRepository,
-  SesionInputDTO, // Asegúrate de que este DTO tenga 'titulo' definido en la interfaz
+  SesionInputDTO,
 } from '../../Dominio/interfaces/sesion/sesion.repository.interface';
 import { SesionEntrenamiento } from '../../Dominio/models/sesion.model';
 import { SesionModel } from '../models/SesionModel';
 
 export class SesionMongoRepository implements SesionRepository {
-  // --- MÉTODOS EXISTENTES (Sin cambios) ---
+  // --- NUEVO MÉTODO: Para que el alumno vea su entreno de hoy ---
+  async getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null> {
+    // Calculamos el inicio y fin del día actual
+    const inicioHoy = new Date();
+    inicioHoy.setHours(0, 0, 0, 0);
+
+    const finHoy = new Date();
+    finHoy.setHours(23, 59, 59, 999);
+
+    return (await SesionModel.findOne({
+      id_usuario: idUsuario,
+      fecha: {
+        $gte: inicioHoy,
+        $lte: finHoy,
+      },
+    })
+      .populate('ejercicios.id_ejercicio')
+      .lean()) as unknown as SesionEntrenamiento;
+  }
+
+  // --- MÉTODOS EXISTENTES ---
 
   async create(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento> {
     const nueva = await SesionModel.create(sesion);
-    // Usamos el truco del 'as any' para evitar líos con el tipo de retorno de Mongoose
     return (nueva as any).toObject() as unknown as SesionEntrenamiento;
   }
 
@@ -40,45 +59,37 @@ export class SesionMongoRepository implements SesionRepository {
   }
 
   async crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento> {
-    // 1. ID DE PLAN FALSO
     const idPlanDummy = '65c2b6e0e6c7a1a4f8f0e999';
 
-    // 2. Procesamos ejercicios
     const ejerciciosMongoose = datos.ejercicios.map((ej) => {
       const idSimulado = new Types.ObjectId();
 
+      // NOTA: Si quieres permitir rangos como "10-12",
+      // deberías cambiar el tipo de 'repeticiones' a String en tu SesionSchema (Mongoose)
       const repsFinal =
         typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones;
 
       return {
-        // Mapeo del nombre correcto
         nombre: ej.nombreEjercicio,
-
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         id_ejercicio: idSimulado as any,
         series: ej.series,
         repeticiones: repsFinal,
         peso: ej.peso || 0,
         observaciones: ej.notas,
+        // --- MODIFICACIÓN: Guardamos el bloque ---
+        bloque: ej.bloque || 0,
       };
     });
 
-    // 3. Crear en Mongoose
-    // TRUCO APLICADO: Añadimos 'as any' al final del objeto para silenciar el error de 'titulo'
     const nuevaSesion = await SesionModel.create({
       titulo: datos.titulo,
       fecha: datos.fechaProgramada,
       finalizada: false,
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       id_plan: idPlanDummy as any,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       id_usuario: datos.idUsuario as any,
-
       ejercicios: ejerciciosMongoose,
-    } as any); // <--- ¡ESTE 'as any' ES LA SOLUCIÓN MÁGICA!
+    } as any);
 
-    // 4. Devolvemos forzando el tipo
     return (nuevaSesion as any).toObject() as unknown as SesionEntrenamiento;
   }
 }
