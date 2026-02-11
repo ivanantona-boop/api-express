@@ -11,6 +11,8 @@ import { LoginUsuarioUseCase } from './Aplicacion/use-cases/usuario/login-usuari
 import { ListarClientesUseCase } from './Aplicacion/use-cases/usuario/listar-clientes.use-case';
 import { CrearPlanUseCase } from './Aplicacion/use-cases/plan/crear-plan.use-case';
 import { ObtenerPlanActualUseCase } from './Aplicacion/use-cases/plan/obtener-plan-actual.use-case';
+// --- AÑADIDO: Importamos el caso de uso de sesión ---
+import { CrearSesionUseCase } from './Aplicacion/use-cases/sesion/crear-sesion.use-case';
 
 // importación de repositorios
 import { UsuarioMongoRepository } from './Infraestructura/repository/usuario.mongo.repository';
@@ -32,7 +34,7 @@ const isTest = process.env.NODE_ENV === 'test';
 const appCache = new NodeCache({ stdTTL: 300 });
 
 // =============================================================
-// Infraestructura
+// Infraestructura (Repositorios)
 // =============================================================
 const usuarioRepo = isTest ? new UsuarioMockRepository() : new UsuarioMongoRepository();
 const ejercicioRepo = isTest ? new EjercicioMockRepository() : new EjercicioMongoRepository();
@@ -40,7 +42,7 @@ const planRepo = isTest ? new PlanMockRepository() : new PlanMongoRepository();
 const sesionRepo = isTest ? new SesionMockRepository() : new SesionMongoRepository();
 
 // =============================================================
-// Aplicación
+// Aplicación (Servicios y Casos de Uso)
 // =============================================================
 
 // Servicios
@@ -53,9 +55,13 @@ const sesionService = new SesionService(sesionRepo);
 const loginUseCase = new LoginUsuarioUseCase(usuarioRepo);
 const listarClientesUseCase = new ListarClientesUseCase(usuarioRepo, appCache);
 
-// Casos de Uso (Planes) - Ambos usan caché según tu última implementación
+// Casos de Uso (Planes)
 const crearPlanUseCase = new CrearPlanUseCase(planRepo, appCache);
 const obtenerPlanActualUseCase = new ObtenerPlanActualUseCase(planRepo, appCache);
+
+// Casos de Uso (Sesiones)
+// --- CORREGIDO: Pasamos sesionRepo Y appCache ---
+const crearSesionUseCase = new CrearSesionUseCase(sesionRepo, appCache);
 
 // =============================================================
 // Controladores
@@ -71,6 +77,7 @@ const ejercicioController = new EjercicioController(ejercicioService);
 
 const planController = new PlanController(planService, crearPlanUseCase, obtenerPlanActualUseCase);
 
-const sesionController = new SesionController(sesionService);
+// --- MODIFICADO: Inyectamos el caso de uso al controlador ---
+const sesionController = new SesionController(sesionService, crearSesionUseCase);
 
 export { usuarioController, ejercicioController, planController, sesionController };

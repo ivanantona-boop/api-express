@@ -4,7 +4,8 @@ import { SesionEntrenamiento } from '../../models/sesion.model';
 export interface SesionInputDTO {
   idUsuario: string; // String normal (no ObjectId todavía)
   titulo: string;
-  fechaProgramada: Date;
+  // Aceptamos string o Date, porque el JSON viene como string
+  fechaProgramada: Date | string;
   ejercicios: {
     nombreEjercicio: string; // Android manda el nombre, no el ID
     series: number;
@@ -16,7 +17,6 @@ export interface SesionInputDTO {
 
 // --- 2. MODIFICADO: Añadimos el nuevo método al contrato ---
 export interface SesionRepository {
-  // Tus métodos antiguos (los mantenemos, son útiles)
   create(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento>;
   getById(id: string): Promise<SesionEntrenamiento | null>;
   getByPlanId(idPlan: string): Promise<SesionEntrenamiento[]>;

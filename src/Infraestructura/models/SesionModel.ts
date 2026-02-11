@@ -5,11 +5,13 @@ import { SesionEntrenamiento } from '../../Dominio/models/sesion.model';
 // _id: false significa que no queremos un ID único para cada serie, solo los datos
 const DetalleSesionSchema = new Schema(
   {
+    nombre: { type: String },
     id_ejercicio: { type: Schema.Types.ObjectId, ref: 'Ejercicio', required: true },
     series: { type: Number, required: true },
     repeticiones: { type: Number, required: true },
     peso: { type: Number, required: true },
     observaciones: { type: String },
+    bloque: { type: Number, default: 0 },
   },
   { _id: false },
 );
@@ -17,6 +19,7 @@ const DetalleSesionSchema = new Schema(
 // 2. Esquema Principal de la Sesión
 const SesionSchema = new Schema<SesionEntrenamiento>(
   {
+    titulo: { type: String, required: true },
     fecha: { type: Date, default: Date.now },
     finalizada: { type: Boolean, default: false },
 
@@ -39,7 +42,7 @@ const SesionSchema = new Schema<SesionEntrenamiento>(
 SesionSchema.set('toJSON', {
   virtuals: true,
   versionKey: false,
-  // 👇 ESLINT: Ignoramos 'any' para poder borrar propiedades de ret
+  // ESLINT: Ignoramos 'any' para poder borrar propiedades de ret
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   transform: function (doc, ret: any) {
     delete ret._id;

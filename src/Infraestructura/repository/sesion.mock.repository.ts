@@ -1,4 +1,3 @@
-// 1. IMPORTANTE: Añade SesionInputDTO a los imports
 import {
   SesionRepository,
   SesionInputDTO,
@@ -28,7 +27,6 @@ export class SesionMockRepository implements SesionRepository {
   ): Promise<SesionEntrenamiento | null> {
     const index = this.sesiones.findIndex((s) => s.id === id);
     if (index === -1) return null;
-
     this.sesiones[index] = { ...this.sesiones[index], ...datos };
     return this.sesiones[index];
   }
@@ -39,20 +37,19 @@ export class SesionMockRepository implements SesionRepository {
     return this.sesiones.length < inicial;
   }
 
-  // --- 2. NUEVO MÉTODO AÑADIDO (El que faltaba) ---
-  // Este método simula la creación desde la App para que el container no falle.
+  // --- ESTE ES EL MÉTODO QUE FALTABA Y CAUSABA EL ERROR ---
   async crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento> {
-    // Simulamos la conversión de datos que hace el MongoRepository
     const nuevaSesionMock: SesionEntrenamiento = {
-      id: 'sesion-app-mock-' + Date.now(), // Generamos ID falso
-      fecha: datos.fechaProgramada,
+      id: 'sesion-app-mock-' + Date.now(),
+      fecha: new Date(datos.fechaProgramada), // Convertimos string a Date
+      titulo: datos.titulo, // Guardamos el título
       finalizada: false,
-      id_plan: 'plan-dummy-mock', // Rellenamos el dato obligatorio que falta
+      id_plan: 'plan-dummy-mock',
       id_usuario: datos.idUsuario,
       ejercicios: datos.ejercicios.map((ej, index) => ({
-        id_ejercicio: 'ejercicio-mock-' + index, // ID falso para el ejercicio
+        nombre: ej.nombreEjercicio, // Guardamos el nombre del ejercicio
+        id_ejercicio: 'ejercicio-mock-' + index,
         series: ej.series,
-        // Si viene string "10-12", cogemos 10. Si es número, se queda igual.
         repeticiones:
           typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones,
         peso: ej.peso || 0,
@@ -60,9 +57,7 @@ export class SesionMockRepository implements SesionRepository {
       })),
     };
 
-    // Guardamos en el array en memoria para que las pruebas funcionen
     this.sesiones.push(nuevaSesionMock);
-
     return nuevaSesionMock;
   }
 }

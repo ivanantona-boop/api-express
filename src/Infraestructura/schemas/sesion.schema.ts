@@ -1,17 +1,22 @@
 import { z } from 'zod';
 
-// 1. Sub-esquema para validar CADA ejercicio dentro de la sesión
+// 1. Sub-esquema para validar CADA ejercicio dentro de la sesión (Dominio interno)
 const DetalleSesionSchema = z.object({
-  // Validamos que venga el ID
+  // Validamos que venga el ID (lo genera Mongo o viene del plan)
   id_ejercicio: z.string().min(1, 'Debes indicar el ID del ejercicio'),
 
+  // --- AÑADIDO: Permitimos que el ejercicio tenga un nombre guardado ---
+  // (Ej: "Sentadilla", "Press Banca")
+  nombre: z.string().optional(),
+
   // Simplificamos: z.number() sin argumentos.
-  // Si envían un texto, Zod dirá "Expected number, received string" automáticamente.
   series: z
     .number()
     .int('Las series deben ser un número entero')
     .positive('Las series deben ser mayor a 0'),
 
+  // OJO: Si quieres guardar "10-12", aquí deberías permitir string.
+  // De momento lo dejo como number para no romper tu lógica actual.
   repeticiones: z
     .number()
     .int('Las repeticiones deben ser un número entero')
@@ -22,43 +27,46 @@ const DetalleSesionSchema = z.object({
   observaciones: z.string().optional(),
 });
 
-// 2. Esquema principal de la Sesión
+// 2. Esquema principal de la Sesión (Lo que se guarda en BD)
 export const SesionSchema = z.object({
+  // --- AÑADIDO: El Título de la Sesión ---
+  // (Ej: "Pierna Hipertrofia", "Día 1"). Lo pongo opcional para que no fallen sesiones antiguas.
+  titulo: z.string().optional(),
+
   fecha: z.coerce.date().default(() => new Date()),
   finalizada: z.boolean().optional().default(false),
 
   id_plan: z.string().min(1, 'Falta el ID del plan'),
   id_usuario: z.string().min(1, 'Falta el ID del usuario'),
 
-  // Validación del array
+  // Validación del array de ejercicios
   ejercicios: z.array(DetalleSesionSchema).optional().default([]),
 });
 
 /**
  * Esquema DTO (Data Transfer Object) para la creación desde la App Android.
- * Es más permisivo porque:
- * 1. No exige ID de ejercicio (viene el nombre).
- * 2. No exige ID de plan (el repositorio pone uno dummy).
- * 3. Permite rangos en repeticiones ("10-12").
+ * Este valida LO QUE LLEGA de la petición HTTP.
  */
 export const SesionAppSchema = z.object({
   idUsuario: z.string().min(1, 'El ID de usuario es obligatorio'),
+
+  // Aquí validamos que Android OBLIGATORIAMENTE envíe un título
   titulo: z.string().min(1, 'El título es obligatorio'),
+
   // Android envía la fecha como String "YYYY-MM-DD", no como objeto Date
   fechaProgramada: z.string(),
 
   ejercicios: z.array(
     z.object({
+      // Android nos envía esto como "nombreEjercicio":
       nombreEjercicio: z.string().min(1, 'El nombre del ejercicio es obligatorio'),
 
-      // Usamos coerce.number() por seguridad, por si llega como string "4"
       series: z.coerce.number().int().positive(),
-
-      // La clave: Aceptamos string O número para permitir rangos "10-12"
+      // Aceptamos string O número para permitir rangos "10-12"
       repeticiones: z.union([z.string(), z.number()]),
-
       peso: z.coerce.number().nonnegative().optional().default(0),
       notas: z.string().optional(),
+      bloque: z.number().optional().default(0),
     }),
   ),
 });
