@@ -64,19 +64,16 @@ export class SesionMongoRepository implements SesionRepository {
     const ejerciciosMongoose = datos.ejercicios.map((ej) => {
       const idSimulado = new Types.ObjectId();
 
-      // NOTA: Si quieres permitir rangos como "10-12",
-      // deberías cambiar el tipo de 'repeticiones' a String en tu SesionSchema (Mongoose)
       const repsFinal =
         typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones;
 
       return {
-        nombre: ej.nombreEjercicio,
+        nombre: ej.nombre, // Antes tenías nombreEjercicio (Daba error)
         id_ejercicio: idSimulado as any,
         series: ej.series,
         repeticiones: repsFinal,
         peso: ej.peso || 0,
-        observaciones: ej.notas,
-        // --- MODIFICACIÓN: Guardamos el bloque ---
+        observaciones: ej.observaciones, // Antes tenías notas (Daba error)
         bloque: ej.bloque || 0,
       };
     });
@@ -91,5 +88,5 @@ export class SesionMongoRepository implements SesionRepository {
     } as any);
 
     return (nuevaSesion as any).toObject() as unknown as SesionEntrenamiento;
-  }
+}
 }

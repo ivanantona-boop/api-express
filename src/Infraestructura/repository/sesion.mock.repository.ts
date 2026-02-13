@@ -17,14 +17,19 @@ export class SesionMockRepository implements SesionRepository {
     return this.sesiones.find((s) => s.id === id) || null;
   }
 
+  async getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null> {
+    const today = new Date().toISOString().split('T')[0];
+    return this.sesiones.find((s) => 
+      s.id_usuario === idUsuario && 
+      new Date(s.fecha).toISOString().split('T')[0] === today
+    ) || null;
+  }
+
   async getByPlanId(idPlan: string): Promise<SesionEntrenamiento[]> {
     return this.sesiones.filter((s) => s.id_plan === idPlan);
   }
 
-  async update(
-    id: string,
-    datos: Partial<SesionEntrenamiento>,
-  ): Promise<SesionEntrenamiento | null> {
+  async update(id: string, datos: Partial<SesionEntrenamiento>): Promise<SesionEntrenamiento | null> {
     const index = this.sesiones.findIndex((s) => s.id === id);
     if (index === -1) return null;
     this.sesiones[index] = { ...this.sesiones[index], ...datos };
@@ -37,26 +42,24 @@ export class SesionMockRepository implements SesionRepository {
     return this.sesiones.length < inicial;
   }
 
-  // --- ESTE ES EL MÉTODO QUE FALTABA Y CAUSABA EL ERROR ---
   async crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento> {
     const nuevaSesionMock: SesionEntrenamiento = {
       id: 'sesion-app-mock-' + Date.now(),
-      fecha: new Date(datos.fechaProgramada), // Convertimos string a Date
-      titulo: datos.titulo, // Guardamos el título
+      fecha: new Date(datos.fechaProgramada),
+      titulo: datos.titulo,
       finalizada: false,
       id_plan: 'plan-dummy-mock',
       id_usuario: datos.idUsuario,
       ejercicios: datos.ejercicios.map((ej, index) => ({
-        nombre: ej.nombreEjercicio, // Guardamos el nombre del ejercicio
+        nombre: ej.nombre,
         id_ejercicio: 'ejercicio-mock-' + index,
         series: ej.series,
-        repeticiones:
-          typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones,
+        repeticiones: typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones,
         peso: ej.peso || 0,
-        observaciones: ej.notas,
+        observaciones: ej.observaciones,
+        bloque: ej.bloque || 0
       })),
     };
-
     this.sesiones.push(nuevaSesionMock);
     return nuevaSesionMock;
   }

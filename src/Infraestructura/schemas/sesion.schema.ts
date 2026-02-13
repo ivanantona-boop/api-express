@@ -29,18 +29,19 @@ const DetalleSesionSchema = z.object({
 
 // 2. Esquema principal de la Sesión (Lo que se guarda en BD)
 export const SesionSchema = z.object({
-  // --- AÑADIDO: El Título de la Sesión ---
-  // (Ej: "Pierna Hipertrofia", "Día 1"). Lo pongo opcional para que no fallen sesiones antiguas.
-  titulo: z.string().optional(),
-
-  fecha: z.coerce.date().default(() => new Date()),
-  finalizada: z.boolean().optional().default(false),
-
-  id_plan: z.string().min(1, 'Falta el ID del plan'),
-  id_usuario: z.string().min(1, 'Falta el ID del usuario'),
-
-  // Validación del array de ejercicios
-  ejercicios: z.array(DetalleSesionSchema).optional().default([]),
+  idUsuario: z.string().min(1),
+  titulo: z.string().min(1),
+  fechaProgramada: z.string(),
+  ejercicios: z.array(
+    z.object({
+      nombre: z.string().min(1), // COINCIDE con @SerialName("nombre") de Kotlin
+      series: z.coerce.number().int().positive(),
+      repeticiones: z.union([z.string(), z.number()]),
+      peso: z.coerce.number().nonnegative().optional().default(0),
+      observaciones: z.string().optional(), // COINCIDE con @SerialName("observaciones") de Kotlin
+      bloque: z.number().optional().default(0),
+    }),
+  ),
 });
 
 /**

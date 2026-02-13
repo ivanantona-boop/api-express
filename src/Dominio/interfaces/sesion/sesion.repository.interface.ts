@@ -7,11 +7,11 @@ export interface SesionInputDTO {
   // Aceptamos string o Date, porque el JSON viene como string
   fechaProgramada: Date | string;
   ejercicios: {
-    nombreEjercicio: string; // Android manda el nombre, no el ID
+    nombre: string; // Android manda el nombre, no el ID
     series: number;
     repeticiones: string | number; // Aceptamos string por si mandan rangos "10-12"
     peso: number;
-    notas?: string;
+    observaciones?: string;
     bloque?: number; // Nuevo campo para identificar agrupaciones de ejercicios
   }[];
 }
@@ -26,4 +26,7 @@ export interface SesionRepository {
 
   // encargado de traducir DTO -> Modelo
   crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento>;
+  getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null>;
+  update(id: string, datos: any): Promise<any>;
 }
+

@@ -32,7 +32,6 @@ import { SesionController } from './Infraestructura/controllers/sesion.controlle
 
 const isTest = process.env.NODE_ENV === 'test';
 const appCache = new NodeCache({ stdTTL: 300 });
-
 // =============================================================
 // Infraestructura (Repositorios)
 // =============================================================
@@ -44,40 +43,26 @@ const sesionRepo = isTest ? new SesionMockRepository() : new SesionMongoReposito
 // =============================================================
 // Aplicación (Servicios y Casos de Uso)
 // =============================================================
-
-// Servicios
 const usuarioService = new UsuarioService(usuarioRepo, appCache);
 const ejercicioService = new EjercicioService(ejercicioRepo);
 const planService = new PlanService(planRepo);
 const sesionService = new SesionService(sesionRepo);
 
-// Casos de Uso (Usuarios)
 const loginUseCase = new LoginUsuarioUseCase(usuarioRepo);
 const listarClientesUseCase = new ListarClientesUseCase(usuarioRepo, appCache);
-
-// Casos de Uso (Planes)
 const crearPlanUseCase = new CrearPlanUseCase(planRepo, appCache);
 const obtenerPlanActualUseCase = new ObtenerPlanActualUseCase(planRepo, appCache);
-
-// Casos de Uso (Sesiones)
-// --- CORREGIDO: Pasamos sesionRepo Y appCache ---
 const crearSesionUseCase = new CrearSesionUseCase(sesionRepo, appCache);
 
 // =============================================================
 // Controladores
 // =============================================================
 
-const usuarioController = new UsuarioController(
-  usuarioService,
-  loginUseCase,
-  listarClientesUseCase,
-);
-
+const usuarioController = new UsuarioController(usuarioService, loginUseCase, listarClientesUseCase);
 const ejercicioController = new EjercicioController(ejercicioService);
-
 const planController = new PlanController(planService, crearPlanUseCase, obtenerPlanActualUseCase);
 
-// --- MODIFICADO: Inyectamos el caso de uso al controlador ---
-const sesionController = new SesionController(sesionService, crearSesionUseCase);
+// CORREGIDO: Inyectamos sesionService, crearSesionUseCase Y sesionRepo
+const sesionController = new SesionController(sesionService, crearSesionUseCase, sesionRepo);
 
 export { usuarioController, ejercicioController, planController, sesionController };

@@ -1,65 +1,104 @@
 import { Request, Response } from 'express';
 import { SesionSchema, SesionAppSchema } from '../schemas/sesion.schema';
 import { SesionService } from '../../Aplicacion/services/sesion.service';
-// 1. IMPORTANTE: Importamos el Caso de Uso
 import { CrearSesionUseCase } from '../../Aplicacion/use-cases/sesion/crear-sesion.use-case';
+import { SesionRepository } from '../../Dominio/interfaces/sesion/sesion.repository.interface';
+import { z } from 'zod';
+
+// Definimos el tipo basado en el esquema para que el IDE no se pierda
+type SesionAppInput = z.infer<typeof SesionAppSchema>;
 
 export class SesionController {
   constructor(
     private readonly sesionService: SesionService,
-    // 2. MODIFICADO: Inyectamos el Caso de Uso aquí (el container.ts te lo pasará)
     private readonly crearSesionUseCase: CrearSesionUseCase,
+    private readonly sesionRepository: SesionRepository,
   ) {}
 
-  // Este método se queda igual (usa el servicio para lógica estándar)
-  createSesion = async (req: Request, res: Response) => {
-    const validacion = SesionSchema.safeParse(req.body);
+  createSesionApp = async (req: Request, res: Response) => {
+    // 1. Validamos
+    const validacion = SesionAppSchema.safeParse(req.body);
 
+    // 2. Si falla, devolvemos error y cortamos ejecución
     if (!validacion.success) {
       return res.status(400).json({ errores: validacion.error.issues });
     }
 
+    // 3. Forzamos el tipo de los datos validados
+    // Esto quita el "rojo" sí o sí
+    const datos = validacion.data as SesionAppInput;
+
     try {
-      const nueva = await this.sesionService.crearSesion(validacion.data);
-      res.status(201).json(nueva);
+      // Usamos los nombres que tienes en tu SesionAppSchema:
+      // idUsuario, titulo, fechaProgramada, ejercicios
+      const nueva = await this.crearSesionUseCase.executeDesdeApp(
+        datos.idUsuario,
+        datos.titulo,
+        datos.fechaProgramada,
+        datos.ejercicios // Aquí van nombreEjercicio, series, repeticiones...
+      );
+
+      return res.status(201).json(nueva);
     } catch (error) {
-      console.error(error);
-      res.status(500).json({ error: 'error al crear la sesión' });
+      console.error('Error en Use Case:', error);
+      return res.status(500).json({ error: 'error al procesar la sesión' });
     }
   };
 
-  // 3. MODIFICADO: Usamos el Caso de Uso en lugar del Servicio
-  createSesionApp = async (req: Request, res: Response) => {
-    console.log('API: Recibiendo petición de creación desde Android');
+  // --- GET HOY ---
+  getSesionHoy = async (req: Request, res: Response) => {
+    try {
+      const { idUsuario } = req.params;
+      const sesion = await this.sesionRepository.getSesionHoy(idUsuario);
+      if (!sesion) return res.status(404).json({ message: 'No hay entreno hoy' });
+      return res.status(200).json(sesion);
+    } catch (error) {
+      return res.status(500).json({ error: 'Error de servidor' });
+    }
+  };
 
+  // --- FINALIZAR ---
+  finalizarSesion = async (req: Request, res: Response) => {
+    try {
+      const { id } = req.params;
+      const actualizada = await this.sesionRepository.update(id, { finalizada: true });
+      if (!actualizada) return res.status(404).json({ message: 'No encontrada' });
+      return res.status(200).json(actualizada);
+    } catch (error) {
+      return res.status(500).json({ error: 'Error al finalizar' });
+    }
+  };
+  // --- RESTO DE MÉTODOS ---
+  createSesion = async (req: Request, res: Response) => {
+    // 1. Validamos la entrada
     const validacion = SesionAppSchema.safeParse(req.body);
 
+    // 2. Si falla, devolvemos 400 con los detalles
     if (!validacion.success) {
-      console.log('Error de validación:', JSON.stringify(validacion.error.issues, null, 2));
+      console.log('Zod Error:', validacion.error.format());
       return res.status(400).json({ errores: validacion.error.issues });
     }
 
-    try {
-      // Extraemos los datos validados por Zod
-      const { idUsuario, titulo, fechaProgramada, ejercicios } = validacion.data;
+    // 3. EXTRAEMOS LOS DATOS (Aquí ya no saldrá en rojo)
+    // TypeScript ya sabe que si llegamos aquí, 'success' es true.
+    const { idUsuario, titulo, fechaProgramada, ejercicios } = validacion.data;
 
-      // CAMBIO CLAVE: Llamamos al Caso de Uso.
-      // Le pasamos los argumentos desglosados tal como los definimos en 'executeDesdeApp'
+    try {
+      // Llamamos al Caso de Uso
       const nueva = await this.crearSesionUseCase.executeDesdeApp(
         idUsuario,
         titulo,
-        fechaProgramada, // Zod nos asegura que esto es un string aquí
-        ejercicios,
+        fechaProgramada,
+        ejercicios
       );
 
-      res.status(201).json(nueva);
+      return res.status(201).json(nueva);
     } catch (error) {
-      console.error('Error creando sesión desde App:', error);
-      res.status(500).json({ error: 'error al crear la sesión desde la app' });
+      console.error('Error en Use Case:', error);
+      return res.status(500).json({ error: 'error interno al crear sesión' });
     }
   };
 
-  // ... El resto de métodos (get, update, delete) se quedan IGUAL, usando sesionService ...
   getSesionById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -67,7 +106,6 @@ export class SesionController {
       if (!sesion) return res.status(404).json({ error: 'sesión no encontrada' });
       res.json(sesion);
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: 'error al obtener sesión' });
     }
   };
@@ -78,7 +116,6 @@ export class SesionController {
       const sesiones = await this.sesionService.obtenerSesionesDelPlan(idPlan);
       res.json(sesiones);
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: 'error al obtener sesiones del plan' });
     }
   };
@@ -86,17 +123,12 @@ export class SesionController {
   updateSesion = async (req: Request, res: Response) => {
     const { id } = req.params;
     const validacion = SesionSchema.partial().safeParse(req.body);
-
-    if (!validacion.success) {
-      return res.status(400).json({ errores: validacion.error.issues });
-    }
-
+    if (!validacion.success) return res.status(400).json({ errores: validacion.error.issues });
     try {
       const actualizada = await this.sesionService.actualizarSesion(id, validacion.data);
       if (!actualizada) return res.status(404).json({ error: 'no se pudo actualizar' });
       res.json(actualizada);
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: 'error al actualizar' });
     }
   };
@@ -108,8 +140,7 @@ export class SesionController {
       if (!eliminada) return res.status(404).json({ error: 'no se pudo eliminar' });
       res.json({ message: 'sesión eliminada' });
     } catch (error) {
-      console.error(error);
       res.status(500).json({ error: 'error al eliminar' });
     }
   };
-}
+} 
