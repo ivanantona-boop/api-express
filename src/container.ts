@@ -11,7 +11,7 @@ import { LoginUsuarioUseCase } from './Aplicacion/use-cases/usuario/login-usuari
 import { ListarClientesUseCase } from './Aplicacion/use-cases/usuario/listar-clientes.use-case';
 import { CrearPlanUseCase } from './Aplicacion/use-cases/plan/crear-plan.use-case';
 import { ObtenerPlanActualUseCase } from './Aplicacion/use-cases/plan/obtener-plan-actual.use-case';
-// --- AÑADIDO: Importamos el caso de uso de sesión ---
+import { CrearUsuarioUseCase } from './Aplicacion/use-cases/usuario/crear-usuario.use-case';
 import { CrearSesionUseCase } from './Aplicacion/use-cases/sesion/crear-sesion.use-case';
 
 // importación de repositorios
@@ -53,12 +53,17 @@ const listarClientesUseCase = new ListarClientesUseCase(usuarioRepo, appCache);
 const crearPlanUseCase = new CrearPlanUseCase(planRepo, appCache);
 const obtenerPlanActualUseCase = new ObtenerPlanActualUseCase(planRepo, appCache);
 const crearSesionUseCase = new CrearSesionUseCase(sesionRepo, appCache);
-
+const crearUsuarioUseCase = new CrearUsuarioUseCase(usuarioRepo, appCache);
 // =============================================================
 // Controladores
 // =============================================================
 
-const usuarioController = new UsuarioController(usuarioService, loginUseCase, listarClientesUseCase);
+const usuarioController = new UsuarioController(
+  usuarioService,
+  loginUseCase,
+  listarClientesUseCase,
+  crearUsuarioUseCase,
+);
 const ejercicioController = new EjercicioController(ejercicioService);
 const planController = new PlanController(planService, crearPlanUseCase, obtenerPlanActualUseCase);
 

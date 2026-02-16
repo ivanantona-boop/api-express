@@ -16,22 +16,29 @@ export class PlanController {
 
   // --- REFACTORIZADO: USA EL CASO DE USO ---
   createPlan = async (req: Request, res: Response) => {
-    // validación estricta de datos entrantes con Zod
+    // 1. Validación (Genera camelCase: objetivoPrincipal)
     const validacion = PlanSchema.safeParse(req.body);
 
     if (!validacion.success) {
       return res.status(400).json({ errores: validacion.error.issues });
     }
 
+    const datos = validacion.data;
+
     try {
-      // CAMBIO CLAVE: Usamos el Caso de Uso (que gestiona la caché y la creación)
-      // Usamos 'as any' para compatibilidad entre el tipo Zod y el Modelo de Dominio
-      const nuevo = await this.crearPlanUseCase.execute(validacion.data as any);
+      // Si no haces esto, a la base de datos le llegarán campos undefined
+
+      const nuevo = await this.crearPlanUseCase.execute({
+        objetivo_principal: datos.objetivoPrincipal,
+        fecha_inicio: datos.fechaInicio,
+        id_usuario: datos.idUsuario,
+        // Si tu modelo tiene más campos, añádelos aquí
+      } as any);
 
       res.status(201).json(nuevo);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'error al crear el plan' });
+      res.status(500).json({ error: 'Error al crear el plan' });
     }
   };
 
@@ -86,16 +93,33 @@ export class PlanController {
 
   updatePlan = async (req: Request, res: Response) => {
     const { id } = req.params;
+
+    // 1. Validación Parcial
     const validacion = PlanSchema.partial().safeParse(req.body);
-    if (!validacion.success) return res.status(400).json({ errores: validacion.error.issues });
+
+    if (!validacion.success) {
+      return res.status(400).json({ errores: validacion.error.issues });
+    }
+
+    const datos = validacion.data;
 
     try {
-      const actualizado = await this.planService.actualizarPlan(id, validacion.data);
-      if (!actualizado) return res.status(404).json({ error: 'no se pudo actualizar' });
+      // 2. TRADUCCIÓN DINÁMICA
+      // Solo mapeamos los campos que hayan venido en la petición
+      const datosParaActualizar: any = {};
+
+      if (datos.objetivoPrincipal) datosParaActualizar.objetivo_principal = datos.objetivoPrincipal;
+      if (datos.fechaInicio) datosParaActualizar.fecha_inicio = datos.fechaInicio;
+      if (datos.idUsuario) datosParaActualizar.id_usuario = datos.idUsuario;
+
+      const actualizado = await this.planService.actualizarPlan(id, datosParaActualizar);
+
+      if (!actualizado) return res.status(404).json({ error: 'Plan no encontrado' });
+
       res.json(actualizado);
     } catch (error) {
       console.error(error);
-      res.status(500).json({ error: 'error al actualizar' });
+      res.status(500).json({ error: 'Error al actualizar plan' });
     }
   };
 

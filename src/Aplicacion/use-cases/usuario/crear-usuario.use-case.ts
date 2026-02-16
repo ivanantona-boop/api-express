@@ -28,10 +28,11 @@ export class CrearUsuarioUseCase {
     const usuarioParaGuardar = {
       ...usuario,
       nickname: nicknameProcesado,
-      rol: 'USUARIO',
+      rol: usuario.rol || 'USUARIO',
     };
 
     // 4. persistencia
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const nuevoUsuario = await this.usuarioRepository.create(usuarioParaGuardar as any);
 
     // 5. gestión de caché

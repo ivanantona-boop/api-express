@@ -9,39 +9,41 @@ export class CrearSesionUseCase {
   ) {}
 
   async execute(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento> {
-    // persistencia de la sesión en la base de datos
     const nuevaSesion = await this.sesionRepository.create(sesion);
-
-    // invalidación de la caché asociada al plan para refrescar los datos
-    this.cache.del(`sesiones_plan_${sesion.id_plan}`);
-
+    // Usamos el operador ?. por si id_plan viene undefined
+    if (sesion.id_plan) {
+      this.cache.del(`sesiones_plan_${sesion.id_plan}`);
+    }
     return nuevaSesion;
   }
-  // --- NUEVO MÉTODO: ESPECÍFICO PARA LA APP ANDROID ---
-  // Este recibe los datos "sueltos" tal cual vienen del Controller
-async executeDesdeApp(
+
+  async executeDesdeApp(
     idUsuario: string,
     titulo: string,
     fechaString: string,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     ejercicios: any[],
   ): Promise<SesionEntrenamiento> {
     const fecha = new Date(fechaString);
 
-    // Pasamos el DTO al repositorio
+    if (isNaN(fecha.getTime())) {
+      throw new Error('Fecha inválida proporcionada desde la App');
+    }
+
+    // Aquí llamamos al repositorio usando la estructura exacta de 'SesionInputDTO'
     return await this.sesionRepository.crearDesdeApp({
       idUsuario,
       titulo,
       fechaProgramada: fecha,
-      ejercicios: ejercicios.map(ej => ({
-        nombreEjercicio: ej.nombre, // Mapeamos 'nombre' (App) a 'nombreEjercicio' (Repositorio)
+      ejercicios: ejercicios.map((ej) => ({
+        // CORREGIDO: Usamos los nombres de la interfaz (DTO), no los del modelo de dominio.
+        nombre: ej.nombre,
         series: ej.series,
-        repeticiones: ej.repeticiones,
+        repeticiones: ej.repeticiones, // Pasa string o number, tu interfaz lo acepta
         peso: ej.peso,
-        notas: ej.observaciones, // Mapeamos 'observaciones' (App) a 'notas' (Repositorio)
-        bloque: ej.bloque
+        bloque: ej.bloque,
+        observaciones: ej.observaciones,
       })),
     });
   }
-  // ------------------------------------------------------
 }
-
