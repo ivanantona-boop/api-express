@@ -10,6 +10,7 @@ router.post('/app', sesionController.createSesionApp);
 // --- RUTAS ESTÁNDAR ---
 router.post('/', sesionController.createSesionApp); // O la lógica que tengas para crear desde JSON normal
 router.get('/', sesionController.getSesionesByPlan); // O la lógica que tengas para listar
+router.get('/usuario/:idUsuario', sesionController.getSesionesByUsuario);
 router.get('/hoy/:idUsuario', sesionController.getSesionHoy);
 
 // --- RUTAS CON ID (Siempre al final para no chocar con /app o /hoy) ---

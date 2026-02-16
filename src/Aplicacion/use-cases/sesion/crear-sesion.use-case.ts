@@ -34,7 +34,7 @@ export class CrearSesionUseCase {
     return await this.sesionRepository.crearDesdeApp({
       idUsuario,
       titulo,
-      fechaProgramada: fecha,
+      fechaProgramada: fecha.toISOString(),
       ejercicios: ejercicios.map((ej) => ({
         // CORREGIDO: Usamos los nombres de la interfaz (DTO), no los del modelo de dominio.
         nombre: ej.nombre,

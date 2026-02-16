@@ -11,16 +11,23 @@ export class SesionController {
     private readonly sesionRepository: SesionRepository,
   ) {}
 
-  // --- MÉTODO PRINCIPAL PARA CREAR DESDE APP ---
+  // --- NUEVO: MÉTODO PARA EL HISTORIAL ---
+  getSesionesByUsuario = async (req: Request, res: Response) => {
+    try {
+      const { idUsuario } = req.params;
+      const sesiones = await this.sesionRepository.findSesionesByUsuario(idUsuario);
+      return res.status(200).json(sesiones);
+    } catch (_error) {
+      console.error('Error al obtener historial:', _error);
+      return res.status(500).json({ error: 'Error al obtener historial de sesiones' });
+    }
+  };
+
   createSesionApp = async (req: Request, res: Response) => {
-    // 1. Validar con safeParse
     const validacion = SesionAppSchema.safeParse(req.body);
 
-    // OPCIÓN B: Usar un bloque if/else explícito
     if (validacion.success) {
-      // DENTRO de este bloque, TypeScript sabe que .data existe y es correcto
       const datos = validacion.data;
-
       try {
         const nueva = await this.crearSesionUseCase.executeDesdeApp(
           datos.idUsuario,
@@ -34,20 +41,15 @@ export class SesionController {
         return res.status(500).json({ error: 'Error al procesar la sesión' });
       }
     } else {
-      // Si no fue exitoso, devolvemos los errores de validación
       return res.status(400).json({ errores: validacion.error.issues });
     }
   };
 
-  // --- GET HOY ---
   getSesionHoy = async (req: Request, res: Response) => {
     try {
       const { idUsuario } = req.params;
       const sesion = await this.sesionRepository.getSesionHoy(idUsuario);
-
-      if (!sesion) {
-        return res.status(404).json({ message: 'No hay entreno programado para hoy' });
-      }
+      if (!sesion) return res.status(404).json({ message: 'No hay entreno programado para hoy' });
       return res.status(200).json(sesion);
     } catch (_error) {
       console.error(_error);
@@ -55,7 +57,6 @@ export class SesionController {
     }
   };
 
-  // --- FINALIZAR ---
   finalizarSesion = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -68,8 +69,6 @@ export class SesionController {
     }
   };
 
-  // --- MÉTODOS CRUD ESTÁNDAR ---
-
   getSesionById = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
@@ -77,7 +76,6 @@ export class SesionController {
       if (!sesion) return res.status(404).json({ error: 'Sesión no encontrada' });
       res.json(sesion);
     } catch (_error) {
-      console.error(_error);
       res.status(500).json({ error: 'Error al obtener sesión' });
     }
   };
@@ -88,45 +86,32 @@ export class SesionController {
       const sesiones = await this.sesionService.obtenerSesionesDelPlan(idPlan);
       res.json(sesiones);
     } catch (_error) {
-      console.error(_error);
       res.status(500).json({ error: 'Error interno' });
     }
   };
 
   updateSesion = async (req: Request, res: Response) => {
     const { id } = req.params;
-
-    // 1. Validamos lo que viene de fuera (Formato App/JSON)
     const validacion = SesionAppSchema.partial().safeParse(req.body);
 
     if (validacion.success) {
       const datosInput = validacion.data;
-
       try {
-        // 2. TRADUCCIÓN (Mapping): De Formato App -> Formato Dominio
-        // Creamos un objeto que sí cumpla con Partial<SesionEntrenamiento>
         const datosParaActualizar: any = { ...datosInput };
-
-        // Si vienen ejercicios, hay que traducir sus campos uno a uno
         if (datosInput.ejercicios) {
           datosParaActualizar.ejercicios = datosInput.ejercicios.map((ej) => ({
-            // Aquí está la corrección del error en rojo:
-            nombreEjercicio: ej.nombre, // La App manda 'nombre', BD quiere 'nombreEjercicio'
+            nombre: ej.nombre,
             series: ej.series,
-            repeticiones: Number(ej.repeticiones), // Aseguramos que sea número
+            repeticiones: Number(ej.repeticiones),
             peso: ej.peso,
             bloque: ej.bloque,
-            observaciones: ej.observaciones, // La App manda 'observaciones', BD quiere 'observaciones'
+            observaciones: ej.observaciones,
           }));
         }
-
-        // 3. Ahora sí, 'datosParaActualizar' tiene el formato correcto
         const actualizada = await this.sesionService.actualizarSesion(id, datosParaActualizar);
-
         if (!actualizada) return res.status(404).json({ error: 'No se pudo actualizar' });
         res.json(actualizada);
       } catch (_error) {
-        console.error(_error);
         res.status(500).json({ error: 'Error al actualizar' });
       }
     } else {
@@ -141,7 +126,6 @@ export class SesionController {
       if (!eliminada) return res.status(404).json({ error: 'No se pudo eliminar' });
       res.json({ message: 'Sesión eliminada correctamente' });
     } catch (_error) {
-      console.error(_error);
       res.status(500).json({ error: 'Error al eliminar' });
     }
   };

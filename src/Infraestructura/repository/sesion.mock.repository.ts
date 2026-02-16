@@ -14,7 +14,14 @@ export class SesionMockRepository implements SesionRepository {
   }
 
   async getById(id: string): Promise<SesionEntrenamiento | null> {
-    return this.sesiones.find((s) => s.id === id) || null;
+    return this.sesiones.find((s) => (s as any).id === id) || null;
+  }
+
+  // --- NUEVO: Necesario para que el Mock cumpla con la interfaz ---
+  async findSesionesByUsuario(idUsuario: string): Promise<SesionEntrenamiento[]> {
+    return this.sesiones
+      .filter((s) => s.id_usuario === idUsuario)
+      .sort((a, b) => new Date(b.fecha).getTime() - new Date(a.fecha).getTime());
   }
 
   async getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null> {
@@ -35,7 +42,7 @@ export class SesionMockRepository implements SesionRepository {
     id: string,
     datos: Partial<SesionEntrenamiento>,
   ): Promise<SesionEntrenamiento | null> {
-    const index = this.sesiones.findIndex((s) => s.id === id);
+    const index = this.sesiones.findIndex((s) => (s as any).id === id);
     if (index === -1) return null;
     this.sesiones[index] = { ...this.sesiones[index], ...datos };
     return this.sesiones[index];
@@ -43,32 +50,31 @@ export class SesionMockRepository implements SesionRepository {
 
   async delete(id: string): Promise<boolean> {
     const inicial = this.sesiones.length;
-    this.sesiones = this.sesiones.filter((s) => s.id !== id);
+    this.sesiones = this.sesiones.filter((s) => (s as any).id !== id);
     return this.sesiones.length < inicial;
   }
 
-  // --- CORRECCIÓN EN ESTE MÉTODO ---
   async crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento> {
     const nuevaSesionMock: SesionEntrenamiento = {
       id: 'sesion-app-mock-' + Date.now(),
-      fecha: new Date(datos.fechaProgramada),
+      fecha: datos.fechaProgramada,
       titulo: datos.titulo,
       finalizada: false,
       id_plan: 'plan-dummy-mock',
       id_usuario: datos.idUsuario,
 
-      // AQUÍ ESTABA EL ERROR:
       ejercicios: datos.ejercicios.map((ej, index) => ({
-        nombreEjercicio: ej.nombre, // CORREGIDO: De 'nombre' a 'nombreEjercicio'
+        nombreEjercicio: ej.nombre, // Sincronizado con Dominio
         id_ejercicio: 'ejercicio-mock-' + index,
         series: ej.series,
         repeticiones:
           typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones,
         peso: ej.peso || 0,
-        notas: ej.observaciones, // CORREGIDO: De 'observaciones' a 'notas'
+        notas: ej.observaciones, // Sincronizado con Dominio
         bloque: ej.bloque || 0,
       })),
-    };
+    } as any;
+
     this.sesiones.push(nuevaSesionMock);
     return nuevaSesionMock;
   }

@@ -7,27 +7,34 @@ import { SesionEntrenamiento } from '../../Dominio/models/sesion.model';
 import { SesionModel } from '../models/SesionModel';
 
 export class SesionMongoRepository implements SesionRepository {
-  // --- NUEVO MÉTODO: Para que el alumno vea su entreno de hoy ---
+  // --- NUEVO MÉTODO: Para el historial del Coach/Usuario ---
+  async findSesionesByUsuario(idUsuario: string): Promise<SesionEntrenamiento[]> {
+    const sesiones = await SesionModel.find({ id_usuario: idUsuario })
+      .sort({ fecha: -1 }) // Ordenar por fecha descendente
+      .lean();
+
+    return sesiones.map((doc) => ({
+      ...doc,
+      id: (doc as any)._id.toString(), // Mapeo de ID para Android
+    })) as unknown as SesionEntrenamiento[];
+  }
+
   async getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null> {
-    // Calculamos el inicio y fin del día actual
     const inicioHoy = new Date();
     inicioHoy.setHours(0, 0, 0, 0);
-
     const finHoy = new Date();
     finHoy.setHours(23, 59, 59, 999);
 
-    return (await SesionModel.findOne({
+    const doc = await SesionModel.findOne({
       id_usuario: idUsuario,
-      fecha: {
-        $gte: inicioHoy,
-        $lte: finHoy,
-      },
+      fecha: { $gte: inicioHoy, $lte: finHoy },
     })
       .populate('ejercicios.id_ejercicio')
-      .lean()) as unknown as SesionEntrenamiento;
-  }
+      .lean();
 
-  // --- MÉTODOS EXISTENTES ---
+    if (!doc) return null;
+    return { ...doc, id: (doc as any)._id.toString() } as unknown as SesionEntrenamiento;
+  }
 
   async create(sesion: SesionEntrenamiento): Promise<SesionEntrenamiento> {
     const nueva = await SesionModel.create(sesion);
@@ -35,22 +42,26 @@ export class SesionMongoRepository implements SesionRepository {
   }
 
   async getById(id: string): Promise<SesionEntrenamiento | null> {
-    return (await SesionModel.findById(id)
-      .populate('ejercicios.id_ejercicio')
-      .lean()) as unknown as SesionEntrenamiento;
+    const doc = await SesionModel.findById(id).populate('ejercicios.id_ejercicio').lean();
+    if (!doc) return null;
+    return { ...doc, id: (doc as any)._id.toString() } as unknown as SesionEntrenamiento;
   }
 
   async getByPlanId(idPlan: string): Promise<SesionEntrenamiento[]> {
-    return (await SesionModel.find({ id_plan: idPlan }).lean()) as unknown as SesionEntrenamiento[];
+    const sesiones = await SesionModel.find({ id_plan: idPlan }).lean();
+    return sesiones.map((s) => ({
+      ...s,
+      id: (s as any)._id.toString(),
+    })) as unknown as SesionEntrenamiento[];
   }
 
   async update(
     id: string,
     sesion: Partial<SesionEntrenamiento>,
   ): Promise<SesionEntrenamiento | null> {
-    return (await SesionModel.findByIdAndUpdate(id, sesion, {
-      new: true,
-    }).lean()) as unknown as SesionEntrenamiento;
+    const doc = await SesionModel.findByIdAndUpdate(id, sesion, { new: true }).lean();
+    if (!doc) return null;
+    return { ...doc, id: (doc as any)._id.toString() } as unknown as SesionEntrenamiento;
   }
 
   async delete(id: string): Promise<boolean> {
@@ -63,17 +74,16 @@ export class SesionMongoRepository implements SesionRepository {
 
     const ejerciciosMongoose = datos.ejercicios.map((ej) => {
       const idSimulado = new Types.ObjectId();
-
       const repsFinal =
         typeof ej.repeticiones === 'string' ? parseInt(ej.repeticiones) || 0 : ej.repeticiones;
 
       return {
-        nombre: ej.nombre, // Antes tenías nombreEjercicio (Daba error)
+        nombre: ej.nombre,
         id_ejercicio: idSimulado as any,
         series: ej.series,
         repeticiones: repsFinal,
         peso: ej.peso || 0,
-        observaciones: ej.observaciones, // Antes tenías notas (Daba error)
+        observaciones: ej.observaciones,
         bloque: ej.bloque || 0,
       };
     });
@@ -87,6 +97,7 @@ export class SesionMongoRepository implements SesionRepository {
       ejercicios: ejerciciosMongoose,
     } as any);
 
-    return (nuevaSesion as any).toObject() as unknown as SesionEntrenamiento;
-}
+    const obj = (nuevaSesion as any).toObject();
+    return { ...obj, id: obj._id.toString() } as unknown as SesionEntrenamiento;
+  }
 }

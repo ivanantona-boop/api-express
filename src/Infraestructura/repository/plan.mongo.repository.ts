@@ -1,6 +1,7 @@
 import { PlanRepository } from '../../Dominio/interfaces/plan/plan.repository.interface';
 import { PlanEntrenamiento } from '../../Dominio/models/plan.model';
 import { PlanModel } from '../models/PlanModel';
+import { SesionModel } from '../models/SesionModel';
 
 export class PlanMongoRepository implements PlanRepository {
   async create(plan: PlanEntrenamiento): Promise<PlanEntrenamiento> {
@@ -33,6 +34,19 @@ export class PlanMongoRepository implements PlanRepository {
   async delete(id: string): Promise<boolean> {
     const res = await PlanModel.findByIdAndDelete(id);
     return !!res;
+  }
+  // Añade este método a tu clase PlanMongoRepository
+  async findSesionesByUsuario(idUsuario: string): Promise<any[]> {
+    // Buscamos en la colección de sesiones aquellas que pertenezcan al alumno
+    const sesiones = await SesionModel.find({ id_usuario: idUsuario }).sort({
+      fecha_programada: -1,
+    });
+
+    // Mapeamos para que el ID de Mongo se llame "id" (lo que espera la App)
+    return sesiones.map((sesion) => {
+      const { _id, ...rest } = sesion.toObject();
+      return { id: _id.toString(), ...rest };
+    });
   }
 
   // --- EL TRADUCTOR (MAPPER) ---
