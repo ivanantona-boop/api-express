@@ -10,6 +10,7 @@ export class SesionMongoRepository implements SesionRepository {
   // --- NUEVO MÉTODO: Para el historial del Coach/Usuario ---
   async findSesionesByUsuario(idUsuario: string): Promise<SesionEntrenamiento[]> {
     const sesiones = await SesionModel.find({ id_usuario: idUsuario })
+      .populate('ejercicios.id_ejercicio')
       .sort({ fecha: -1 }) // Ordenar por fecha descendente
       .lean();
 

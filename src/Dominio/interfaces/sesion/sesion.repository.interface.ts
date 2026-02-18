@@ -24,5 +24,5 @@ export interface SesionRepository {
   // Métodos específicos para la comunicación con la App
   crearDesdeApp(datos: SesionInputDTO): Promise<SesionEntrenamiento>;
   getSesionHoy(idUsuario: string): Promise<SesionEntrenamiento | null>;
-  findSesionesByUsuario(idUsuario: string): Promise<SesionEntrenamiento[]>; // <--- NUEVO
+  findSesionesByUsuario(idUsuario: string): Promise<SesionEntrenamiento[]>;
 }
