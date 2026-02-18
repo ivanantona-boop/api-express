@@ -102,7 +102,7 @@ export class SesionController {
           datosParaActualizar.ejercicios = datosInput.ejercicios.map((ej) => ({
             nombre: ej.nombre,
             series: ej.series,
-            repeticiones: Number(ej.repeticiones),
+            repeticiones: ej.repeticiones,
             peso: ej.peso,
             bloque: ej.bloque,
             observaciones: ej.observaciones,

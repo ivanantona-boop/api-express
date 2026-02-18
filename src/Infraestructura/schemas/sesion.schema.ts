@@ -7,7 +7,7 @@ const _DetalleSesionSchema = z.object({
 
   // --- AÑADIDO: Permitimos que el ejercicio tenga un nombre guardado ---
   // (Ej: "Sentadilla", "Press Banca")
-  nombre: z.string().optional(),
+  nombre: z.string().optional().default('Ejercicio'),
 
   // Simplificamos: z.number() sin argumentos.
   series: z
