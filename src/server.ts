@@ -7,9 +7,10 @@ const startServer = async () => {
     // 1. Conectamos a la Base de Datos
     await connectMongoDB();
 
+    const PORT = config.PORT || 8080;
     // 2. Arrancamos el servidor
     // Usamos la instancia 'app' que importamos arriba
-    app.listen(config.PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Servidor corriendo en http://localhost:${config.PORT}`);
       console.log(`Documentación Swagger: http://localhost:${config.PORT}/api-docs`);
       console.log(`Rutas activas:`);
