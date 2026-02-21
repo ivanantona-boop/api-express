@@ -5,23 +5,21 @@ export class LoginUsuarioUseCase {
   constructor(private readonly usuarioRepository: UsuarioRepository) {}
 
   async execute(nickname: string, contrasena: string): Promise<Usuario> {
-    // 1. Buscamos al usuario por su nickname
+    // 1. Busqueda del usuario por su identificador unico
     const usuario = await this.usuarioRepository.getByNickname(nickname);
 
-    // 2. Si no existe, lanzamos error (el controlador lo capturará y devolverá 404)
+    // 2. Validacion de existencia en el repositorio
     if (!usuario) {
       throw new Error('Usuario no encontrado');
     }
 
-    // 3. Verificamos la contraseña
-    // NOTA: Aquí es donde más adelante pondremos 'bcrypt.compare'
-    // Por ahora, usamos comparación directa para validar que el flujo funciona.
-    // Usamos (usuario as any) por si tu modelo es estricto y no expone la contraseña.
-    if ((usuario as any).contrasena !== contrasena) {
-      throw new Error('Contraseña incorrecta');
+    // 3. Verificacion de credenciales
+    // Se compara la contrasena almacenada con la proporcionada
+    if (usuario.contrasena !== contrasena) {
+      throw new Error('Contrasena incorrecta');
     }
 
-    // 4. Si todo va bien, devolvemos el usuario
+    // 4. Retorno del objeto de dominio si la validacion es exitosa
     return usuario;
   }
 }

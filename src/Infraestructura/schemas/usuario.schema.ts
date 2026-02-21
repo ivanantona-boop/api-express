@@ -1,29 +1,38 @@
 import { z } from 'zod';
 
 export const UsuarioSchema = z.object({
-  // validación del nickname: reemplaza al dni
-  // usamos trim() para limpiar espacios y validamos longitud
   nickname: z
     .string()
-    .min(1, 'el nickname es obligatorio') // aseguramos que no esté vacío
+    .min(1, 'el nickname es obligatorio')
     .min(3, 'el nickname debe tener al menos 3 caracteres')
     .max(20, 'el nickname no puede superar los 20 caracteres')
     .trim(),
 
-  // validación de contraseña básica
-  contrasena: z.string().min(4, 'la contraseña debe tener al menos 4 caracteres'),
+  contrasena: z.string().min(4, 'la contrasena debe tener al menos 4 caracteres'),
 
   nombre: z.string().min(1, 'el nombre es obligatorio'),
   apellidos: z.string().min(1, 'los apellidos son obligatorios'),
 
-  // validación de rol: permitimos recibirlo en minúscula pero lo transformamos a mayúscula
-  // esto asegura que en base de datos siempre se guarde como 'USUARIO' o 'ENTRENADOR'
+  // Se incluyen ALUMNO y CLIENTE para evitar errores de coincidencia con la base de datos
   rol: z
-    .enum(['USUARIO', 'ENTRENADOR', 'usuario', 'entrenador'])
-    .transform((val) => val.toUpperCase() as 'USUARIO' | 'ENTRENADOR')
-    .optional() // es opcional, si no viene se asignará el default en mongoose
+    .enum([
+      'USUARIO',
+      'ENTRENADOR',
+      'ALUMNO',
+      'CLIENTE',
+      'usuario',
+      'entrenador',
+      'alumno',
+      'cliente',
+    ])
+    .transform((val) => {
+      const valorUpper = val.toUpperCase();
+      // Estandarizamos: si es ALUMNO o CLIENTE, lo tratamos como USUARIO para la logica de la App
+      if (valorUpper === 'ALUMNO' || valorUpper === 'CLIENTE') return 'USUARIO';
+      return valorUpper as 'USUARIO' | 'ENTRENADOR';
+    })
+    .optional()
     .default('USUARIO'),
 
-  // campo opcional para relacionar con un entrenador
   id_entrenador: z.string().optional(),
 });
