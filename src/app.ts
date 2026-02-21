@@ -2,9 +2,10 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import swaggerUi from 'swagger-ui-express';
+import rateLimit from 'express-rate-limit';
 import { openApiSpec } from './Infraestructura/config/swagger';
 
-// 1. IMPORTAR CONFIG (Necesario para CORS y Health check)
+// IMPORTAR CONFIG
 import { config } from './Infraestructura/config/env';
 
 // Importación de rutas
@@ -15,18 +16,35 @@ import { SesionRouter } from './Infraestructura/routes/sesion.route';
 
 const app = express();
 
-// Middlewares Globales
+// =========================================================
+// MIDDLEWARES DE SEGURIDAD Y CONFIGURACIÓN
+// =========================================================
 app.use(helmet());
-
-// 2. USAR CONFIG EN CORS (Mejor seguridad que dejarlo abierto a todo el mundo)
 app.use(cors({ origin: config.CORS_ORIGIN }));
-
 app.use(express.json());
+
+// 2. CONFIGURAMOS EL ESCUDO GENERAL (RATE LIMIT)
+const limiterGeneral = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos de "memoria"
+  max: 10, // Límite de 10 peticiones por IP cada 15 minutos
+  message: {
+    error: 'Demasiadas peticiones desde esta IP, por favor intenta de nuevo en 15 minutos.',
+  },
+  standardHeaders: true, // Devuelve información del límite en las cabeceras (RateLimit-Limit)
+  legacyHeaders: false, // Deshabilita las cabeceras antiguas (X-RateLimit)
+});
+
+// 3. APLICAMOS EL ESCUDO SOLO A LAS RUTAS DE LA API (Dejamos Swagger libre)
+app.use('/api', limiterGeneral);
+
+// =========================================================
+// RUTAS
+// =========================================================
 
 // --- RUTA DE DOCUMENTACIÓN SWAGGER ---
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
-// --- RUTAS DE LA API (Te faltaban las 3 nuevas) ---
+// --- RUTAS DE LA API ---
 app.use('/api/usuarios', usuarioRouter);
 app.use('/api/ejercicios', ejercicioRouter);
 app.use('/api/planes', planRouter);
