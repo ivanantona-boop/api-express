@@ -20,13 +20,13 @@ export class UsuarioController {
   // --- MÉTODO REFACTORIZADO (LOGIN) ---
   login = async (req: Request, res: Response) => {
     try {
-      const { nickname, contrasena } = req.body;
+      const { nickname, pass } = req.body;
 
-      if (!nickname || !contrasena) {
+      if (!nickname || !pass) {
         return res.status(400).json({ error: 'faltan datos de acceso' });
       }
 
-      const usuario = await this.loginUseCase.execute(nickname, contrasena);
+      const usuario = await this.loginUseCase.execute(nickname, pass);
 
       res.status(200).json(usuario);
     } catch (error: unknown) {
@@ -49,9 +49,10 @@ export class UsuarioController {
     }
   };
 
-  // --- CREATE USUARIO (CORREGIDO LINTER) ---
+  // --- CREATE USUARIO ---
   createUsuario = async (req: Request, res: Response) => {
     try {
+      // 1. Validamos que venga 'pass' desde Android
       const validacion = UsuarioSchema.safeParse(req.body);
 
       if (!validacion.success) {
@@ -60,15 +61,17 @@ export class UsuarioController {
 
       const datos = validacion.data;
 
+      // 2. Traducimos 'pass' a 'contrasena' para el dominio (sin usar "as any")
       const nuevo = await this.crearUsuarioUseCase.execute({
-        ...datos,
+        nickname: datos.nickname,
+        nombre: datos.nombre,
+        apellidos: datos.apellidos,
         rol: datos.rol,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+        contrasena: datos.pass, // Aquí hacemos la traducción explícita, sin forzar tipos
+      });
 
       res.status(201).json(nuevo);
     } catch (error: unknown) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const err = error as any;
       if (err.message && err.message.includes('existe'))
         return res.status(409).json({ error: err.message });

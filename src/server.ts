@@ -7,12 +7,12 @@ const startServer = async () => {
     // 1. Conectamos a la Base de Datos
     await connectMongoDB();
 
-    const PORT = config.PORT || 8080;
+    const PORT = config.PORT || 3005; // Usamos el puerto de la config, con fallback a 3005
     // 2. Arrancamos el servidor
     // Usamos la instancia 'app' que importamos arriba
     app.listen(PORT, '0.0.0.0', () => {
-      console.log(`Servidor corriendo en http://localhost:${config.PORT}`);
-      console.log(`Documentación Swagger: http://localhost:${config.PORT}/api-docs`);
+      console.log(`Servidor corriendo en http://localhost:${PORT}`);
+      console.log(`Documentación Swagger: http://localhost:${PORT}/api-docs`);
       console.log(`Rutas activas:`);
       console.log(`   - /api/usuarios`);
       console.log(`   - /api/ejercicios`);

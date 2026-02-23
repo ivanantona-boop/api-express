@@ -8,7 +8,7 @@ export const UsuarioSchema = z.object({
     .max(20, 'el nickname no puede superar los 20 caracteres')
     .trim(),
 
-  contrasena: z.string().min(4, 'la contrasena debe tener al menos 4 caracteres'),
+  pass: z.string().min(4, 'la contrasena debe tener al menos 4 caracteres'),
 
   nombre: z.string().min(1, 'el nombre es obligatorio'),
   apellidos: z.string().min(1, 'los apellidos son obligatorios'),
@@ -27,7 +27,6 @@ export const UsuarioSchema = z.object({
     ])
     .transform((val) => {
       const valorUpper = val.toUpperCase();
-      // Estandarizamos: si es ALUMNO o CLIENTE, lo tratamos como USUARIO para la logica de la App
       if (valorUpper === 'ALUMNO' || valorUpper === 'CLIENTE') return 'USUARIO';
       return valorUpper as 'USUARIO' | 'ENTRENADOR';
     })

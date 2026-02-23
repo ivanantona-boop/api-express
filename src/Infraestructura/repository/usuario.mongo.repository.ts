@@ -23,7 +23,11 @@ export class UsuarioMongoRepository implements UsuarioRepository {
   }
 
   async getByNickname(nickname: string): Promise<Usuario | null> {
-    const doc = await UsuarioModel.findOne({ nickname: nickname }).lean();
+    // Buscamos el nickname de forma insensible a mayusculas/minusculas (^ y $ aseguran coincidencia exacta)
+    const doc = await UsuarioModel.findOne({
+      nickname: { $regex: new RegExp(`^${nickname}$`, 'i') },
+    }).lean();
+
     if (!doc) return null;
     return this.mapToDomain(doc);
   }
